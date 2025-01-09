@@ -1395,7 +1395,7 @@ mod test {
             max_winning_options: 1,
         };
 
-        let size = proposal.try_to_vec().unwrap().len();
+        let size = borsh::to_vec(&proposal).unwrap().len();
 
         assert_eq!(proposal.get_max_size(), Some(size));
     }
@@ -1410,7 +1410,7 @@ mod test {
             max_winning_options: 3,
         };
 
-        let size = proposal.try_to_vec().unwrap().len();
+        let size = borsh::to_vec(&proposal).unwrap().len();
 
         assert_eq!(proposal.get_max_size(), Some(size));
     }

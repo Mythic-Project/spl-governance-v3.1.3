@@ -722,7 +722,8 @@ mod test {
         let governance_data = create_test_governance();
 
         // Act
-        let size = governance_data.try_to_vec().unwrap().len();
+        let size = borsh::to_vec(&governance_data).unwrap().len();
+
 
         // Assert
         assert_eq!(governance_data.get_max_size(), Some(size));
@@ -734,8 +735,7 @@ mod test {
         let governance = create_test_v1_governance();
 
         // Act
-        let size = governance.try_to_vec().unwrap().len();
-
+        let size = borsh::to_vec(&governance).unwrap().len();
         // Assert
         assert_eq!(108, size);
     }
