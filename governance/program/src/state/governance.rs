@@ -10,7 +10,7 @@ use {
         },
         tools::structs::Reserved119,
     },
-    borsh::{maybestd::io::Write, BorshDeserialize, BorshSchema, BorshSerialize},
+    borsh::{io::Write, BorshDeserialize, BorshSchema, BorshSerialize},
     solana_program::{
         account_info::AccountInfo, program_error::ProgramError, program_pack::IsInitialized,
         pubkey::Pubkey, rent::Rent,

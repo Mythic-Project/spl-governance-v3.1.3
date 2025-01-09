@@ -17,15 +17,15 @@ no-entrypoint = []
 test-sbf = []
 
 [dependencies]
-solana-program = "1.17.6"
+solana-program = { workspace = true }
 num-traits = "0.2"
-borsh = "0.10"
+borsh = { workspace = true }
 num-derive = "0.4.1"
 thiserror = "1.0.56"
 
 [dev-dependencies]
-solana-program-test = "1.17.6"
-solana-sdk = "1.17.6"
+solana-program-test = { workspace = true }
+solana-sdk = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "lib"]

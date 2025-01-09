@@ -9,7 +9,7 @@ use {
         },
         PROGRAM_AUTHORITY_SEED,
     },
-    borsh::{maybestd::io::Write, BorshDeserialize, BorshSchema, BorshSerialize},
+    borsh::{io::Write, BorshDeserialize, BorshSchema, BorshSerialize},
     core::panic,
     solana_program::{
         account_info::AccountInfo,

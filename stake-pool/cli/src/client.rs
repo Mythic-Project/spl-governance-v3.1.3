@@ -8,7 +8,7 @@ use {
         rpc_filter::{Memcmp, RpcFilterType},
     },
     solana_program::{
-        borsh0_10::try_from_slice_unchecked, program_pack::Pack, pubkey::Pubkey, stake,
+        borsh1::try_from_slice_unchecked, program_pack::Pack, pubkey::Pubkey, stake,
     },
     spl_stake_pool::{
         find_withdraw_authority_program_address,

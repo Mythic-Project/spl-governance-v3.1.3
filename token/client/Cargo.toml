@@ -9,15 +9,14 @@ version = "0.8.0"
 
 [dependencies]
 async-trait = "0.1"
-curve25519-dalek = "3.2.1"
 futures = "0.3.30"
 futures-util = "0.3"
-solana-banks-interface = "1.17.6"
-solana-cli-output = { version = "1.17.6", optional = true }
-solana-program-test = "1.17.6"
-solana-rpc-client = "1.17.6"
-solana-rpc-client-api = "1.17.6"
-solana-sdk = "1.17.6"
+solana-banks-interface = { workspace = true }
+solana-cli-output = { workspace = true, optional = true }
+solana-program-test = { workspace = true }
+solana-rpc-client = { workspace = true }
+solana-rpc-client-api = { workspace = true }
+solana-sdk = { workspace = true }
 # We never want the entrypoint for ATA, but we want the entrypoint for token when
 # testing token
 spl-associated-token-account = { version = "2.0", path = "../../associated-token-account/program", features = ["no-entrypoint"] }

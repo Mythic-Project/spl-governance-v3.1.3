@@ -9,11 +9,11 @@ no-entrypoint = []
 test-sbf = []
 
 [dependencies]
-solana-program = "1.17.6"
+solana-program = { workspace = true }
 thiserror = "1.0"
 spl-token = {version = "4.0", path = "../../token/program", features = ["no-entrypoint"]}
 arrayref = "0.3.7"
-borsh = "0.10"
+borsh = { workspace = true }
 uint = "0.9"
 
 [lib]
