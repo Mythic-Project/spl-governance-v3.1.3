@@ -14,10 +14,12 @@ use {
     spl_governance_test_sdk::tools::clone_keypair,
 };
 
+#[allow(dead_code)]
 pub trait AccountCookie {
     fn get_address(&self) -> Pubkey;
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct RealmCookie {
     pub address: Pubkey,
@@ -37,12 +39,14 @@ pub struct RealmCookie {
     pub realm_config: RealmConfigCookie,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct RealmConfigCookie {
     pub address: Pubkey,
     pub account: RealmConfigAccount,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct TokenOwnerRecordCookie {
     pub address: Pubkey,
@@ -78,6 +82,7 @@ impl TokenOwnerRecordCookie {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct GovernedProgramCookie {
     pub address: Pubkey,
@@ -137,6 +142,7 @@ pub struct GovernanceCookie {
     pub next_proposal_index: u32,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProposalCookie {
     pub address: Pubkey,
@@ -148,12 +154,14 @@ pub struct ProposalCookie {
     pub proposal_deposit: ProposalDepositCookie,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProposalDepositCookie {
     pub address: Pubkey,
     pub account: ProposalDeposit,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct SignatoryRecordCookie {
     pub address: Pubkey,
@@ -161,6 +169,7 @@ pub struct SignatoryRecordCookie {
     pub signatory: Option<Keypair>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct VoteRecordCookie {
     pub address: Pubkey,
@@ -174,24 +183,28 @@ pub struct ProposalTransactionCookie {
     pub instruction: Instruction,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct VoterWeightRecordCookie {
     pub address: Pubkey,
     pub account: VoterWeightRecord,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct MaxVoterWeightRecordCookie {
     pub address: Pubkey,
     pub account: MaxVoterWeightRecord,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ProgramMetadataCookie {
     pub address: Pubkey,
     pub account: ProgramMetadata,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct NativeTreasuryCookie {
     pub address: Pubkey,

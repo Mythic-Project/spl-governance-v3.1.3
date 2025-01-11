@@ -26,7 +26,7 @@ use {
         sysvar::Sysvar,
     },
     spl_governance_tools::account::create_and_serialize_account_signed,
-    spl_token::{instruction::AuthorityType, state::Mint},
+    spl_token_2022::{instruction::AuthorityType, state::Mint},
 };
 
 /// Processes CreateMintGovernance instruction

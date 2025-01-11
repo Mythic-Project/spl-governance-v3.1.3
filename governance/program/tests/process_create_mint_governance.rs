@@ -7,7 +7,7 @@ use {
     solana_sdk::{signature::Keypair, signer::Signer},
     spl_governance::error::GovernanceError,
     spl_governance_tools::error::GovernanceToolsError,
-    spl_token::error::TokenError,
+    spl_token_2022::error::TokenError,
 };
 
 #[tokio::test]
@@ -29,6 +29,7 @@ async fn test_create_mint_governance() {
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .unwrap();
@@ -70,6 +71,7 @@ async fn test_create_mint_governance_without_transferring_mint_authority() {
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .unwrap();
@@ -114,6 +116,7 @@ async fn test_create_mint_governance_without_transferring_mint_authority_with_in
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .err()
@@ -149,6 +152,7 @@ async fn test_create_mint_governance_without_transferring_mint_authority_with_au
                 i.accounts[3].is_signer = false; // governed_mint_authority
             },
             Some(&[&token_owner_record_cookie.token_owner]),
+            false
         )
         .await
         .err()
@@ -179,6 +183,7 @@ async fn test_create_mint_governance_with_invalid_mint_authority_error() {
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .err()
@@ -206,6 +211,7 @@ async fn test_create_mint_governance_with_invalid_realm_error() {
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .unwrap();
@@ -219,6 +225,7 @@ async fn test_create_mint_governance_with_invalid_realm_error() {
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .err()
@@ -247,6 +254,7 @@ async fn test_create_mint_governance_with_freeze_authority_transfer() {
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .unwrap();

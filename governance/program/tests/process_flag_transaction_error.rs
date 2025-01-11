@@ -122,6 +122,7 @@ async fn test_execute_proposal_transaction_after_flagged_with_error() {
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .unwrap();
@@ -218,6 +219,7 @@ async fn test_execute_second_transaction_after_first_transaction_flagged_with_er
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .unwrap();
@@ -310,6 +312,7 @@ async fn test_flag_transaction_error_with_proposal_transaction_already_executed_
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .unwrap();

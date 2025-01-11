@@ -42,6 +42,70 @@ async fn test_create_governance() {
 }
 
 #[tokio::test]
+async fn test_create_governance_token_2022() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_cookie = governance_test.with_realm_token_2022().await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
+
+    let token_owner_record_cookie = governance_test
+        .with_community_2022_token_deposit(&realm_cookie)
+        .await
+        .unwrap();
+
+    // Act
+    let governance_cookie = governance_test
+        .with_governance(
+            &realm_cookie,
+            &governed_account_cookie,
+            &token_owner_record_cookie,
+        )
+        .await
+        .unwrap();
+
+    // Assert
+    let governance_account = governance_test
+        .get_governance_account(&governance_cookie.address)
+        .await;
+
+    assert_eq!(governance_cookie.account, governance_account);
+}
+
+#[tokio::test]
+async fn test_create_governance_token_2022_with_transfer_fees() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
+
+    let realm_cookie = governance_test
+        .with_realm_token_2022_with_transfer_fees()
+        .await;
+
+    let token_owner_record_cookie = governance_test
+        .with_community_2022_token_deposit_with_transfer_fees(&realm_cookie)
+        .await
+        .unwrap();
+
+    // Act
+    let governance_cookie = governance_test
+        .with_governance(
+            &realm_cookie,
+            &governed_account_cookie,
+            &token_owner_record_cookie,
+        )
+        .await
+        .unwrap();
+
+    // Assert
+    let governance_account = governance_test
+        .get_governance_account(&governance_cookie.address)
+        .await;
+
+    assert_eq!(governance_cookie.account, governance_account);
+}
+
+#[tokio::test]
 async fn test_create_governance_with_invalid_realm_error() {
     // Arrange
     let mut governance_test = GovernanceProgramTest::start_new().await;

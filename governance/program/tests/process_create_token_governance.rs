@@ -7,7 +7,7 @@ use {
     solana_sdk::{signature::Keypair, signer::Signer},
     spl_governance::error::GovernanceError,
     spl_governance_tools::error::GovernanceToolsError,
-    spl_token::{error::TokenError, instruction::AuthorityType},
+    spl_token_2022::{error::TokenError, instruction::AuthorityType},
 };
 
 #[tokio::test]

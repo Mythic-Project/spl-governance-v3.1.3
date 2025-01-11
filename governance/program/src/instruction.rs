@@ -1,5 +1,8 @@
 //! Program instructions
 
+// Needed to avoid deprecation warning when building/testing the program
+#![allow(deprecated)]
+
 use {
     crate::{
         state::{
@@ -24,7 +27,7 @@ use {
             token_owner_record::get_token_owner_record_address,
             vote_record::{get_vote_record_address, Vote},
         },
-        tools::bpf_loader_upgradeable::get_program_data_address,
+        tools::{bpf_loader_upgradeable::get_program_data_address, spl_token::inline_spl_token},
     },
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
     solana_program::{
@@ -51,7 +54,7 @@ pub enum GovernanceInstruction {
     ///     The account will be created with the Realm PDA as its owner
     /// 4. `[signer]` Payer
     /// 5. `[]` System
-    /// 6. `[]` SPL Token
+    /// 6. `[]` SPL Token or SPL Token 2022 program
     /// 7. `[]` Sysvar Rent
     /// 8. `[]` Council Token Mint - optional
     /// 9. `[writable]` Council Token Holding account - optional unless council
@@ -95,7 +98,7 @@ pub enum GovernanceInstruction {
     ///       governing_token_owner]
     ///  6. `[signer]` Payer
     ///  7. `[]` System
-    ///  8. `[]` SPL Token program
+    ///  8. `[]` SPL Token or SPL Token 2022 program
     ///  9. `[]` RealmConfig account.
     ///     * PDA seeds: ['realm-config', realm]
     DepositGoverningTokens {
@@ -120,7 +123,7 @@ pub enum GovernanceInstruction {
     ///  4. `[writable]` TokenOwnerRecord account.
     ///     * PDA seeds: ['governance',realm, governing_token_mint,
     ///       governing_token_owner]
-    ///  5. `[]` SPL Token program
+    ///  5. `[]` SPL Token or SPL Token 2022 program
     ///  6. `[]` RealmConfig account.
     ///     * PDA seeds: ['realm-config', realm]
     WithdrawGoverningTokens {},
@@ -441,12 +444,16 @@ pub enum GovernanceInstruction {
     ///   4. `[]` Governing TokenOwnerRecord account (Used only if not signed by
     ///      RealmAuthority)
     ///   5. `[signer]` Payer
-    ///   6. `[]` SPL Token program
+    ///   6. `[]` SPL Token or SPL Token 2022 program
     ///   7. `[]` System program
     ///   8. `[signer]` Governance authority
     ///   9. `[]` RealmConfig account.
     ///     * PDA seeds: ['realm-config', realm]
     ///   10. `[]` Optional Voter Weight Record
+    #[deprecated(
+        since = "3.1.1",
+        note = "please use `CreateGovernance` instead"
+    )]
     CreateMintGovernance {
         #[allow(dead_code)]
         /// Governance config
@@ -472,12 +479,16 @@ pub enum GovernanceInstruction {
     ///   4. `[]` Governing TokenOwnerRecord account (Used only if not signed by
     ///      RealmAuthority)
     ///   5. `[signer]` Payer
-    ///   6. `[]` SPL Token program
+    ///   6. `[]` SPL Token or SPL Token 2022 program
     ///   7. `[]` System program
     ///   8. `[signer]` Governance authority
     ///   9. `[]` RealmConfig account.
     ///     * PDA seeds: ['realm-config', realm]
     ///   10. `[]` Optional Voter Weight Record
+    #[deprecated(
+        since = "3.1.1",
+        note = "please use `CreateGovernance` instead"
+    )]
     CreateTokenGovernance {
         #[allow(dead_code)]
         /// Governance config
@@ -611,7 +622,7 @@ pub enum GovernanceInstruction {
     ///                   membership
     ///  5. `[]` RealmConfig account.
     ///     * PDA seeds: ['realm-config', realm]
-    ///  6. `[]` SPL Token program
+    ///  6. `[]` SPL Token or SPL Token 2022 program
     RevokeGoverningTokens {
         /// The amount to revoke
         #[allow(dead_code)]
@@ -681,6 +692,7 @@ pub fn create_realm(
     name: String,
     min_community_weight_to_create_governance: u64,
     community_mint_max_voter_weight_source: MintMaxVoterWeightSource,
+    is_token_2022: bool,
 ) -> Instruction {
     let realm_address = get_realm_address(program_id, &name);
     let community_token_holding_address =
@@ -693,7 +705,14 @@ pub fn create_realm(
         AccountMeta::new(community_token_holding_address, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(
+            if is_token_2022 {
+                spl_token_2022::id()
+            } else {
+                inline_spl_token::id()
+            },
+            false,
+        ),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
@@ -748,6 +767,7 @@ pub fn deposit_governing_tokens(
     // Args
     amount: u64,
     governing_token_mint: &Pubkey,
+    is_token_2022: bool,
 ) -> Instruction {
     let token_owner_record_address = get_token_owner_record_address(
         program_id,
@@ -761,7 +781,7 @@ pub fn deposit_governing_tokens(
 
     let realm_config_address = get_realm_config_address(program_id, realm);
 
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new_readonly(*realm, false),
         AccountMeta::new(governing_token_holding_address, false),
         AccountMeta::new(*governing_token_source, false),
@@ -770,9 +790,22 @@ pub fn deposit_governing_tokens(
         AccountMeta::new(token_owner_record_address, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(
+            if is_token_2022 {
+                spl_token_2022::id()
+            } else {
+                inline_spl_token::id()
+            },
+            false,
+        ),
         AccountMeta::new_readonly(realm_config_address, false),
     ];
+
+
+    // needed for transfer_checked instruction
+    if is_token_2022 {
+        accounts.push(AccountMeta::new(*governing_token_mint, false));
+    };
 
     let instruction = GovernanceInstruction::DepositGoverningTokens { amount };
 
@@ -792,6 +825,7 @@ pub fn withdraw_governing_tokens(
     governing_token_owner: &Pubkey,
     // Args
     governing_token_mint: &Pubkey,
+    is_token_2022: bool,
 ) -> Instruction {
     let token_owner_record_address = get_token_owner_record_address(
         program_id,
@@ -805,15 +839,27 @@ pub fn withdraw_governing_tokens(
 
     let realm_config_address = get_realm_config_address(program_id, realm);
 
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new_readonly(*realm, false),
         AccountMeta::new(governing_token_holding_address, false),
         AccountMeta::new(*governing_token_destination, false),
         AccountMeta::new_readonly(*governing_token_owner, true),
         AccountMeta::new(token_owner_record_address, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(
+            if is_token_2022 {
+                spl_token_2022::id()
+            } else {
+                inline_spl_token::id()
+            },
+            false,
+        ),
         AccountMeta::new_readonly(realm_config_address, false),
     ];
+
+    // needed for transfer_checked instruction
+    if is_token_2022 {
+        accounts.push(AccountMeta::new(*governing_token_mint, false));
+    };
 
     let instruction = GovernanceInstruction::WithdrawGoverningTokens {};
 
@@ -952,6 +998,10 @@ pub fn create_program_governance(
 
 /// Creates CreateMintGovernance
 #[allow(clippy::too_many_arguments)]
+#[deprecated(
+    since = "3.1.1",
+    note = "Please use `create_governance` instead"
+)]
 pub fn create_mint_governance(
     program_id: &Pubkey,
     // Accounts
@@ -965,6 +1015,7 @@ pub fn create_mint_governance(
     // Args
     config: GovernanceConfig,
     transfer_mint_authorities: bool,
+    is_token_2022: bool,
 ) -> Instruction {
     let mint_governance_address = get_mint_governance_address(program_id, realm, governed_mint);
 
@@ -975,7 +1026,14 @@ pub fn create_mint_governance(
         AccountMeta::new_readonly(*governed_mint_authority, true),
         AccountMeta::new_readonly(*token_owner_record, false),
         AccountMeta::new(*payer, true),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(
+            if is_token_2022 {
+                spl_token_2022::id()
+            } else {
+                inline_spl_token::id()
+            },
+            false,
+        ),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(*create_authority, true),
     ];
@@ -996,6 +1054,10 @@ pub fn create_mint_governance(
 
 /// Creates CreateTokenGovernance instruction
 #[allow(clippy::too_many_arguments)]
+#[deprecated(
+    since = "3.1.1",
+    note = "Please use `create_governance` instead"
+)]
 pub fn create_token_governance(
     program_id: &Pubkey,
     // Accounts
@@ -1009,6 +1071,7 @@ pub fn create_token_governance(
     // Args
     config: GovernanceConfig,
     transfer_account_authorities: bool,
+    is_token_2022: bool,
 ) -> Instruction {
     let token_governance_address = get_token_governance_address(program_id, realm, governed_token);
 
@@ -1019,7 +1082,14 @@ pub fn create_token_governance(
         AccountMeta::new_readonly(*governed_token_owner, true),
         AccountMeta::new_readonly(*token_owner_record, false),
         AccountMeta::new(*payer, true),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(
+            if is_token_2022 {
+                spl_token_2022::id()
+            } else {
+                inline_spl_token::id()
+            },
+            false,
+        ),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(*create_authority, true),
     ];
@@ -1714,6 +1784,7 @@ pub fn revoke_governing_tokens(
     revoke_authority: &Pubkey,
     // Args
     amount: u64,
+    is_token_2022: bool,
 ) -> Instruction {
     let token_owner_record_address = get_token_owner_record_address(
         program_id,
@@ -1734,7 +1805,14 @@ pub fn revoke_governing_tokens(
         AccountMeta::new(*governing_token_mint, false),
         AccountMeta::new_readonly(*revoke_authority, true),
         AccountMeta::new_readonly(realm_config_address, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(
+            if is_token_2022 {
+                spl_token_2022::id()
+            } else {
+                inline_spl_token::id()
+            },
+            false,
+        ),
     ];
 
     let instruction = GovernanceInstruction::RevokeGoverningTokens { amount };
@@ -1876,6 +1954,104 @@ pub fn complete_proposal(
     ];
 
     let instruction = GovernanceInstruction::CompleteProposal {};
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+
+/// Creates DepositGoverningTokens with extra account metas instruction for token hook extension
+#[allow(clippy::too_many_arguments)]
+pub fn deposit_governing_tokens_with_extra_account_metas(
+    program_id: &Pubkey,
+    // Accounts
+    realm: &Pubkey,
+    governing_token_source: &Pubkey,
+    governing_token_owner: &Pubkey,
+    governing_token_source_authority: &Pubkey,
+    payer: &Pubkey,
+    // Args
+    amount: u64,
+    governing_token_mint: &Pubkey,
+    extra_account_metas: Vec<AccountMeta>,
+) -> Instruction {
+    let token_owner_record_address = get_token_owner_record_address(
+        program_id,
+        realm,
+        governing_token_mint,
+        governing_token_owner,
+    );
+
+    let governing_token_holding_address =
+        get_governing_token_holding_address(program_id, realm, governing_token_mint);
+
+    let realm_config_address = get_realm_config_address(program_id, realm);
+
+    let mut accounts = vec![
+        AccountMeta::new_readonly(*realm, false),
+        AccountMeta::new(governing_token_holding_address, false),
+        AccountMeta::new(*governing_token_source, false),
+        AccountMeta::new_readonly(*governing_token_owner, true),
+        AccountMeta::new_readonly(*governing_token_source_authority, true),
+        AccountMeta::new(token_owner_record_address, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(spl_token_2022::id(), false),
+        AccountMeta::new_readonly(realm_config_address, false),
+        AccountMeta::new(*governing_token_mint, false),
+    ];
+
+    accounts.extend(extra_account_metas);
+
+    let instruction = GovernanceInstruction::DepositGoverningTokens { amount };
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+/// Creates WithdrawGoverningTokens with extra account metas instruction for token hook extension
+pub fn withdraw_governing_tokens_with_extra_account_metas(
+    program_id: &Pubkey,
+    // Accounts
+    realm: &Pubkey,
+    governing_token_destination: &Pubkey,
+    governing_token_owner: &Pubkey,
+    // Args
+    governing_token_mint: &Pubkey,
+    extra_account_metas: Vec<AccountMeta>,
+) -> Instruction {
+    let token_owner_record_address = get_token_owner_record_address(
+        program_id,
+        realm,
+        governing_token_mint,
+        governing_token_owner,
+    );
+
+    let governing_token_holding_address =
+        get_governing_token_holding_address(program_id, realm, governing_token_mint);
+
+    let realm_config_address = get_realm_config_address(program_id, realm);
+
+    let mut accounts = vec![
+        AccountMeta::new_readonly(*realm, false),
+        AccountMeta::new(governing_token_holding_address, false),
+        AccountMeta::new(*governing_token_destination, false),
+        AccountMeta::new_readonly(*governing_token_owner, true),
+        AccountMeta::new(token_owner_record_address, false),
+        AccountMeta::new_readonly(spl_token_2022::id(), false),
+        AccountMeta::new_readonly(realm_config_address, false),
+        AccountMeta::new(*governing_token_mint, false),
+    ];
+
+    accounts.extend(extra_account_metas);
+
+    let instruction = GovernanceInstruction::WithdrawGoverningTokens {};
 
     Instruction {
         program_id: *program_id,

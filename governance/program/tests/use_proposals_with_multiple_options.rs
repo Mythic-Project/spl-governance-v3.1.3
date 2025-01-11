@@ -656,6 +656,7 @@ async fn test_execute_proposal_with_multiple_options_and_partial_success() {
             &governed_mint_cookie,
             &token_owner_record_cookie1,
             &governance_config,
+            false
         )
         .await
         .unwrap();
@@ -869,6 +870,7 @@ async fn test_try_execute_proposal_with_multiple_options_and_full_deny() {
             &governed_mint_cookie,
             &token_owner_record_cookie1,
             &governance_config,
+            false
         )
         .await
         .unwrap();
@@ -1277,6 +1279,7 @@ async fn test_vote_multi_weighted_choice_proposal_with_partial_success() {
             &governed_mint_cookie,
             &token_owner_record_cookie1,
             &governance_config,
+            false
         )
         .await
         .unwrap();
@@ -1499,6 +1502,7 @@ async fn test_vote_multi_weighted_choice_proposal_with_multi_success() {
             &governed_mint_cookie,
             &token_owner_record_cookie1,
             &governance_config,
+            false
         )
         .await
         .unwrap();
@@ -1683,6 +1687,7 @@ async fn test_vote_multi_weighted_choice_proposal_executable_with_full_deny() {
             &governed_mint_cookie,
             &token_owner_record_cookie1,
             &governance_config,
+            false
         )
         .await
         .unwrap();

@@ -252,6 +252,7 @@ async fn test_create_mint_governance_with_voter_weight_addin() {
             &realm_cookie,
             &governed_mint_cookie,
             &token_owner_record_cookie,
+            false
         )
         .await
         .unwrap();

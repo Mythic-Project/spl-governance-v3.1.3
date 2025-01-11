@@ -106,3 +106,126 @@ async fn test_create_realm_for_existing_pda() {
 
     assert_eq!(realm_cookie.account, realm_account);
 }
+
+
+
+#[tokio::test]
+async fn test_create_realm_with_token_2022() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    // Act
+    let realm_cookie = governance_test.with_realm_token_2022().await;
+
+    // Assert
+    let realm_account = governance_test
+        .get_realm_account(&realm_cookie.address)
+        .await;
+
+    assert_eq!(realm_cookie.account, realm_account);
+}
+
+
+#[tokio::test]
+async fn test_create_realm_token_2022_with_non_default_config() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_setup_args = RealmSetupArgs {
+        use_council_mint: false,
+        community_mint_max_voter_weight_source: MintMaxVoterWeightSource::SupplyFraction(1),
+        min_community_weight_to_create_governance: 1,
+        ..Default::default()
+    };
+
+    // Act
+    let realm_cookie = governance_test
+        .with_realm_using_args_token_2022(&realm_setup_args)
+        .await;
+
+    // Assert
+    let realm_account = governance_test
+        .get_realm_account(&realm_cookie.address)
+        .await;
+
+    assert_eq!(realm_cookie.account, realm_account);
+}
+
+#[tokio::test]
+async fn test_create_realm_token_2022_with_max_voter_weight_absolute_value() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_setup_args = RealmSetupArgs {
+        community_mint_max_voter_weight_source: MintMaxVoterWeightSource::Absolute(1),
+        ..Default::default()
+    };
+
+    // Act
+    let realm_cookie = governance_test
+        .with_realm_using_args_token_2022(&realm_setup_args)
+        .await;
+
+    // Assert
+    let realm_account = governance_test
+        .get_realm_account(&realm_cookie.address)
+        .await;
+
+    assert_eq!(realm_cookie.account, realm_account);
+    assert_eq!(
+        realm_cookie
+            .account
+            .config
+            .community_mint_max_voter_weight_source,
+        MintMaxVoterWeightSource::Absolute(1)
+    );
+}
+
+#[tokio::test]
+async fn test_create_realm_token_2022_for_existing_pda() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_name = format!("Realm #{}", governance_test.next_realm_id).to_string();
+    let realm_address = get_realm_address(&governance_test.program_id, &realm_name);
+
+    let rent_exempt = governance_test.bench.rent.minimum_balance(0);
+
+    governance_test
+        .bench
+        .transfer_sol(&realm_address, rent_exempt)
+        .await;
+
+    // Act
+    let realm_cookie = governance_test.with_realm_token_2022().await;
+
+    // Assert
+    let realm_account = governance_test
+        .get_realm_account(&realm_cookie.address)
+        .await;
+
+    assert_eq!(realm_cookie.account, realm_account);
+}
+
+
+#[tokio::test]
+async fn test_create_realm_with_token_2022_with_transfer_fees() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_setup_args = RealmSetupArgs {
+        use_council_mint: true,
+        community_mint_max_voter_weight_source: MintMaxVoterWeightSource::SupplyFraction(1),
+        min_community_weight_to_create_governance: 1,
+        ..Default::default()
+    };
+    // Act
+    let realm_cookie = governance_test.with_realm_using_args_token_2022_with_transfer_fees(&realm_setup_args).await;
+
+    // Assert
+    let realm_account = governance_test
+        .get_realm_account(&realm_cookie.address)
+        .await;
+
+    assert_eq!(realm_cookie.account, realm_account);
+}

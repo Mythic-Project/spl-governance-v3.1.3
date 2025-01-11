@@ -10,7 +10,9 @@ use {
                 get_token_owner_record_address_seeds, get_token_owner_record_data_for_seeds,
             },
         },
-        tools::spl_token::{get_spl_token_mint, transfer_spl_tokens_signed},
+        tools::spl_token::{
+            get_spl_token_mint, transfer_spl_tokens_signed, transfer_spl_tokens_signed_checked,
+        },
     },
     solana_program::{
         account_info::{next_account_info, AccountInfo},
@@ -33,6 +35,11 @@ pub fn process_withdraw_governing_tokens(
     let token_owner_record_info = next_account_info(account_info_iter)?; // 4
     let spl_token_info = next_account_info(account_info_iter)?; // 5
     let realm_config_info = next_account_info(account_info_iter)?; // 6
+    let expected_mint_info = if let Ok(expected_mint_info) = next_account_info(account_info_iter) {
+        Some(expected_mint_info)
+    } else {
+        None
+    }; // 7 if using token_2022
 
     if !governing_token_owner_info.is_signer {
         return Err(GovernanceError::GoverningTokenOwnerMustSign.into());
@@ -67,15 +74,36 @@ pub fn process_withdraw_governing_tokens(
 
     token_owner_record_data.assert_can_withdraw_governing_tokens()?;
 
-    transfer_spl_tokens_signed(
-        governing_token_holding_info,
-        governing_token_destination_info,
-        realm_info,
-        &get_realm_address_seeds(&realm_data.name),
-        program_id,
-        token_owner_record_data.governing_token_deposit_amount,
-        spl_token_info,
-    )?;
+    match expected_mint_info {
+        Some(mint_info) => {
+            let additional_accounts = account_info_iter.as_slice();
+            transfer_spl_tokens_signed_checked(
+                governing_token_holding_info,
+                governing_token_destination_info,
+                realm_info,
+                &get_realm_address_seeds(&realm_data.name),
+                program_id,
+                token_owner_record_data.governing_token_deposit_amount,
+                spl_token_info,
+                mint_info,
+                additional_accounts,
+            )?;
+        }
+        _ => {
+            // Maintain backwards compatibility
+            // Token-2022 requires transfer_checked method with mint
+            // Downstream the instruction will fail if the data supplied is invalid
+            transfer_spl_tokens_signed(
+                governing_token_holding_info,
+                governing_token_destination_info,
+                realm_info,
+                &get_realm_address_seeds(&realm_data.name),
+                program_id,
+                token_owner_record_data.governing_token_deposit_amount,
+                spl_token_info,
+            )?;
+        }
+    }
 
     token_owner_record_data.governing_token_deposit_amount = 0;
     token_owner_record_data.serialize(&mut token_owner_record_info.data.borrow_mut()[..])?;

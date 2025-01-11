@@ -5,7 +5,9 @@ use {
     arrayref::array_ref,
     solana_program::{
         account_info::AccountInfo,
+        clock::Clock,
         entrypoint::ProgramResult,
+        instruction::AccountMeta,
         msg,
         program::{invoke, invoke_signed},
         program_error::ProgramError,
@@ -14,12 +16,25 @@ use {
         pubkey::Pubkey,
         rent::Rent,
         system_instruction,
+        sysvar::Sysvar,
     },
-    spl_token::{
-        instruction::{set_authority, AuthorityType},
-        state::{Account, Mint},
+    spl_token_2022::{
+        extension::{
+            transfer_fee::TransferFeeConfig, transfer_hook, AccountType, BaseStateWithExtensions,
+            ExtensionType, PodStateWithExtensions, StateWithExtensions,
+        },
+        generic_token_account::GenericTokenAccount,
+        instruction::AuthorityType,
+        pod::PodMint,
+        state::{Account, Mint, Multisig},
     },
+    spl_transfer_hook_interface::onchain::add_extra_accounts_for_execute_cpi,
 };
+
+/// Used to determine if the spl_mint is valid
+pub mod inline_spl_token {
+    solana_program::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+}
 
 /// Creates and initializes SPL token account with PDA using the provided PDA
 /// seeds
@@ -36,12 +51,28 @@ pub fn create_spl_token_account_signed<'a>(
     rent_sysvar_info: &AccountInfo<'a>,
     rent: &Rent,
 ) -> Result<(), ProgramError> {
+    let spl_token_program_id = spl_token_info.key;
+
+    // Get the token space for if the token has extensions.
+    let space = if spl_token_program_id.eq(&spl_token_2022::id()) {
+        let mint_data = token_mint_info.data.borrow();
+
+        let state = PodStateWithExtensions::<PodMint>::unpack(&mint_data)
+            .map_err(|_| Into::<ProgramError>::into(GovernanceError::InvalidGoverningTokenMint))?;
+        let mint_extensions = state.get_extension_types()?;
+        let required_extensions =
+            ExtensionType::get_required_init_account_extensions(&mint_extensions);
+        ExtensionType::try_calculate_account_len::<Account>(&required_extensions)?
+    } else {
+        spl_token_2022::state::Account::get_packed_len()
+    };
+
     let create_account_instruction = system_instruction::create_account(
         payer_info.key,
         token_account_info.key,
-        1.max(rent.minimum_balance(spl_token::state::Account::get_packed_len())),
-        spl_token::state::Account::get_packed_len() as u64,
-        &spl_token::id(),
+        1.max(rent.minimum_balance(space)),
+        space as u64,
+        spl_token_program_id,
     );
 
     let (account_address, bump_seed) =
@@ -70,8 +101,8 @@ pub fn create_spl_token_account_signed<'a>(
         &[&signers_seeds[..]],
     )?;
 
-    let initialize_account_instruction = spl_token::instruction::initialize_account(
-        &spl_token::id(),
+    let initialize_account_instruction = spl_token_2022::instruction::initialize_account(
+        spl_token_program_id,
         token_account_info.key,
         token_mint_info.key,
         token_account_owner_info.key,
@@ -100,8 +131,14 @@ pub fn transfer_spl_tokens<'a>(
     amount: u64,
     spl_token_info: &AccountInfo<'a>,
 ) -> ProgramResult {
-    let transfer_instruction = spl_token::instruction::transfer(
-        &spl_token::id(),
+    let spl_token_program_id = spl_token_info.key;
+    
+    // Maintain backwards compatibility
+    // spl_token_2022::instruction::transfer() is a replica of spl_token::instruction::transfer()
+    // if spl_token program_id is used, it would cpi to spl_token program.
+    #[allow(deprecated)]
+    let transfer_instruction = spl_token_2022::instruction::transfer(
+        spl_token_program_id,
         source_info.key,
         destination_info.key,
         authority_info.key,
@@ -123,6 +160,72 @@ pub fn transfer_spl_tokens<'a>(
     Ok(())
 }
 
+/// Transfers SPL Tokens
+pub fn transfer_checked_spl_tokens<'a>(
+    source_info: &AccountInfo<'a>,
+    destination_info: &AccountInfo<'a>,
+    authority_info: &AccountInfo<'a>,
+    amount: u64,
+    spl_token_info: &AccountInfo<'a>,
+    mint_info: &AccountInfo<'a>,
+    additional_accounts: &[AccountInfo<'a>],
+) -> ProgramResult {
+    let spl_token_program_id = spl_token_info.key;
+
+    let mut transfer_instruction = spl_token_2022::instruction::transfer_checked(
+        spl_token_program_id,
+        source_info.key,
+        mint_info.key,
+        destination_info.key,
+        authority_info.key,
+        &[],
+        amount,
+        get_mint_decimals(mint_info)?,
+    )
+    .unwrap();
+
+    let mut cpi_account_infos = vec![
+        source_info.clone(),
+        mint_info.clone(),
+        destination_info.clone(),
+        authority_info.clone(),
+    ];
+
+    // if it's a signer, it might be a multisig signer, throw it in!
+    additional_accounts
+        .iter()
+        .filter(|ai| ai.is_signer)
+        .for_each(|ai| {
+            cpi_account_infos.push(ai.clone());
+            transfer_instruction
+                .accounts
+                .push(AccountMeta::new_readonly(*ai.key, ai.is_signer));
+        });
+    // used for transfer_hooks
+    // scope the borrowing to avoid a double-borrow during CPI
+    {
+        let mint_data = mint_info.try_borrow_data()?;
+        let mint = StateWithExtensions::<Mint>::unpack(&mint_data)?;
+        if let Some(program_id) = transfer_hook::get_program_id(&mint) {
+            add_extra_accounts_for_execute_cpi(
+                &mut transfer_instruction,
+                &mut cpi_account_infos,
+                &program_id,
+                source_info.clone(),
+                mint_info.clone(),
+                destination_info.clone(),
+                authority_info.clone(),
+                amount,
+                additional_accounts,
+            )?;
+        }
+    }
+
+    invoke(&transfer_instruction, &cpi_account_infos)?;
+
+    Ok(())
+}
+
 /// Mint SPL Tokens
 pub fn mint_spl_tokens_to<'a>(
     mint_info: &AccountInfo<'a>,
@@ -131,8 +234,10 @@ pub fn mint_spl_tokens_to<'a>(
     amount: u64,
     spl_token_info: &AccountInfo<'a>,
 ) -> ProgramResult {
-    let mint_to_ix = spl_token::instruction::mint_to(
-        &spl_token::id(),
+    let spl_token_program_id = spl_token_info.key;
+
+    let mint_to_ix = spl_token_2022::instruction::mint_to(
+        spl_token_program_id,
         mint_info.key,
         destination_info.key,
         mint_authority_info.key,
@@ -176,8 +281,11 @@ pub fn transfer_spl_tokens_signed<'a>(
         return Err(ProgramError::InvalidSeeds);
     }
 
-    let transfer_instruction = spl_token::instruction::transfer(
-        &spl_token::id(),
+    let spl_token_program_id = spl_token_info.key;
+    // for backwards compatibility we do not use transfer_checked() here.
+    #[allow(deprecated)]
+    let transfer_instruction = spl_token_2022::instruction::transfer(
+        spl_token_program_id,
         source_info.key,
         destination_info.key,
         authority_info.key,
@@ -198,6 +306,95 @@ pub fn transfer_spl_tokens_signed<'a>(
             source_info.clone(),
             destination_info.clone(),
         ],
+        &[&signers_seeds[..]],
+    )?;
+
+    Ok(())
+}
+
+/// Transfers SPL Tokens checked from a token account owned by the provided PDA
+/// authority with seeds
+pub fn transfer_spl_tokens_signed_checked<'a>(
+    source_info: &AccountInfo<'a>,
+    destination_info: &AccountInfo<'a>,
+    authority_info: &AccountInfo<'a>,
+    authority_seeds: &[&[u8]],
+    program_id: &Pubkey,
+    amount: u64,
+    spl_token_info: &AccountInfo<'a>,
+    mint_info: &AccountInfo<'a>,
+    additional_accounts: &[AccountInfo<'a>],
+) -> ProgramResult {
+    let (authority_address, bump_seed) = Pubkey::find_program_address(authority_seeds, program_id);
+
+    if authority_address != *authority_info.key {
+        msg!(
+                "Transfer SPL Token with Authority PDA: {:?} was requested while PDA: {:?} was expected",
+                authority_info.key,
+                authority_address
+            );
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    let spl_token_program_id = spl_token_info.key;
+
+    let mut transfer_instruction = spl_token_2022::instruction::transfer_checked(
+        spl_token_program_id,
+        source_info.key,
+        mint_info.key,
+        destination_info.key,
+        authority_info.key,
+        &[],
+        amount,
+        get_mint_decimals(mint_info)?,
+    )
+    .unwrap();
+
+    let mut signers_seeds = authority_seeds.to_vec();
+    let bump = &[bump_seed];
+    signers_seeds.push(bump);
+
+    let mut cpi_account_infos = vec![
+        source_info.clone(),
+        mint_info.clone(),
+        destination_info.clone(),
+        authority_info.clone(),
+    ];
+
+    // if it's a signer, it might be a multisig signer, throw it in!
+    additional_accounts
+        .iter()
+        .filter(|ai| ai.is_signer)
+        .for_each(|ai| {
+            cpi_account_infos.push(ai.clone());
+            transfer_instruction
+                .accounts
+                .push(AccountMeta::new_readonly(*ai.key, ai.is_signer));
+        });
+
+    // used for transfer_hooks
+    // scope the borrowing to avoid a double-borrow during CPI
+    {
+        let mint_data = mint_info.try_borrow_data()?;
+        let mint = StateWithExtensions::<Mint>::unpack(&mint_data)?;
+        if let Some(program_id) = transfer_hook::get_program_id(&mint) {
+            add_extra_accounts_for_execute_cpi(
+                &mut transfer_instruction,
+                &mut cpi_account_infos,
+                &program_id,
+                source_info.clone(),
+                mint_info.clone(),
+                destination_info.clone(),
+                authority_info.clone(),
+                amount,
+                additional_accounts,
+            )?;
+        }
+    }
+
+    invoke_signed(
+        &transfer_instruction,
+        &cpi_account_infos,
         &[&signers_seeds[..]],
     )?;
 
@@ -226,8 +423,9 @@ pub fn burn_spl_tokens_signed<'a>(
         return Err(ProgramError::InvalidSeeds);
     }
 
-    let burn_ix = spl_token::instruction::burn(
-        &spl_token::id(),
+    let spl_token_program_id = spl_token_info.key;
+    let burn_ix = spl_token_2022::instruction::burn(
+        spl_token_program_id,
         token_account_info.key,
         token_mint_info.key,
         authority_info.key,
@@ -261,26 +459,15 @@ pub fn assert_is_valid_spl_token_account(account_info: &AccountInfo) -> Result<(
         return Err(GovernanceError::SplTokenAccountDoesNotExist.into());
     }
 
-    if account_info.owner != &spl_token::id() {
+    // inline_spl_token is used to avoid including the whole package.
+    if account_info.owner != &spl_token_2022::id() && account_info.owner != &inline_spl_token::ID {
         return Err(GovernanceError::SplTokenAccountWithInvalidOwner.into());
     }
 
-    if account_info.data_len() != Account::LEN {
+    // Check if the account data is a valid token account
+    // also checks if the account is initialized or not.
+    if !Account::valid_account_data(&account_info.try_borrow_data()?) {
         return Err(GovernanceError::SplTokenInvalidTokenAccountData.into());
-    }
-
-    // TokenAccount layout:
-    //  mint(32)
-    //  owner(32)
-    //  amount(8)
-    //  delegate(36)
-    //  state(1)
-    //  ...
-    let data = account_info.try_borrow_data()?;
-    let state = array_ref![data, 108, 1];
-
-    if state == &[0] {
-        return Err(GovernanceError::SplTokenAccountNotInitialized.into());
     }
 
     Ok(())
@@ -298,11 +485,13 @@ pub fn assert_is_valid_spl_token_mint(mint_info: &AccountInfo) -> Result<(), Pro
         return Err(GovernanceError::SplTokenMintDoesNotExist.into());
     }
 
-    if mint_info.owner != &spl_token::id() {
+    // inline_spl_token is used to avoid including the whole package.
+    if mint_info.owner != &spl_token_2022::id() && mint_info.owner != &inline_spl_token::ID {
         return Err(GovernanceError::SplTokenMintWithInvalidOwner.into());
     }
 
-    if mint_info.data_len() != Mint::LEN {
+    // assert that length is mint
+    if !valid_mint_length(&mint_info.try_borrow_data()?) {
         return Err(GovernanceError::SplTokenInvalidMintAccountData.into());
     }
 
@@ -419,8 +608,9 @@ pub fn set_spl_token_account_authority<'a>(
     authority_type: AuthorityType,
     spl_token_info: &AccountInfo<'a>,
 ) -> Result<(), ProgramError> {
-    let set_authority_ix = set_authority(
-        &spl_token::id(),
+    let spl_token_program_id = spl_token_info.key;
+    let set_authority_ix = spl_token_2022::instruction::set_authority(
+        spl_token_program_id,
         account_info.key,
         Some(new_account_authority),
         authority_type,
@@ -438,4 +628,41 @@ pub fn set_spl_token_account_authority<'a>(
     )?;
 
     Ok(())
+}
+
+/// Computationally cheap method to just get supply off a mint without unpacking whole object
+pub fn get_mint_decimals(account_info: &AccountInfo) -> Result<u8, ProgramError> {
+    // In token program, 36, 8, 1, 1, is the layout, where the first 1 is decimals u8.
+    // so we start at 36.
+    let data = account_info.try_borrow_data()?;
+
+    // If we don't check this and an empty account is passed in, we get a panic when
+    // we try to index into the data.
+    if data.is_empty() {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(data[44])
+}
+
+const ACCOUNTTYPE_MINT: u8 = AccountType::Mint as u8;
+fn valid_mint_length(mint_data: &[u8]) -> bool {
+    mint_data.len() == Mint::LEN
+        || (mint_data.len() > Mint::LEN
+            && mint_data.len() != Multisig::LEN
+            && ACCOUNTTYPE_MINT == mint_data[Mint::LEN])
+}
+
+/// Get current TransferFee, returns 0 if no TransferFeeConfig exist.
+pub fn get_current_mint_fee(mint_info: &AccountInfo, amount: u64) -> Result<u64, ProgramError> {
+    let mint_data = mint_info.try_borrow_data()?;
+    let mint = PodStateWithExtensions::<PodMint>::unpack(&mint_data)?;
+
+    if let Ok(transfer_fee_config) = mint.get_extension::<TransferFeeConfig>() {
+        Ok(transfer_fee_config
+            .calculate_epoch_fee(Clock::get()?.epoch, amount)
+            .ok_or(GovernanceError::MathematicalOverflow)?)
+    } else {
+        Ok(0)
+    }
 }

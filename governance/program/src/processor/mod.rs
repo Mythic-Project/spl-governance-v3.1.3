@@ -126,6 +126,7 @@ pub fn process_instruction(
             transfer_upgrade_authority,
         ),
 
+        #[allow(deprecated)]
         GovernanceInstruction::CreateMintGovernance {
             config,
             transfer_mint_authorities,
@@ -133,6 +134,7 @@ pub fn process_instruction(
             process_create_mint_governance(program_id, accounts, config, transfer_mint_authorities)
         }
 
+        #[allow(deprecated)]
         GovernanceInstruction::CreateTokenGovernance {
             config,
             transfer_account_authorities,
