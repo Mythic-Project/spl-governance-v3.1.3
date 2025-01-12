@@ -16,22 +16,19 @@ use {
             legacy::ProposalV1,
             proposal_transaction::ProposalTransactionV2,
             realm::RealmV2,
+            proposal_versioned_transaction::ProposalVersionedTransaction,
             realm_config::RealmConfigAccount,
             vote_record::{Vote, VoteKind},
         },
         tools::spl_token::get_spl_token_mint_supply,
         PROGRAM_AUTHORITY_SEED,
-    },
-    borsh::{io::Write, BorshDeserialize, BorshSchema, BorshSerialize},
-    solana_program::{
+    }, borsh::{io::Write, BorshDeserialize, BorshSchema, BorshSerialize}, solana_program::{
         account_info::{next_account_info, AccountInfo},
         clock::{Slot, UnixTimestamp},
         program_error::ProgramError,
         program_pack::IsInitialized,
         pubkey::Pubkey,
-    },
-    spl_governance_tools::account::{get_account_data, get_account_type, AccountMaxSize},
-    std::{cmp::Ordering, slice::Iter},
+    }, spl_governance_tools::account::{get_account_data, get_account_type, AccountMaxSize}, std::{cmp::Ordering, slice::Iter}
 };
 
 /// Proposal option vote result
@@ -874,6 +871,52 @@ impl ProposalV2 {
         }
 
         if proposal_transaction_data.executed_at.is_some() {
+            return Err(GovernanceError::TransactionAlreadyExecuted.into());
+        }
+
+        Ok(())
+    }
+
+    /// Checks if Instructions can be executed for the Proposal in the given
+    /// state
+    pub fn assert_can_execute_versioned_transaction(
+        &self,
+        proposal_versioned_transaction_data: &ProposalVersionedTransaction,
+        governance_config: &GovernanceConfig,
+        current_unix_timestamp: UnixTimestamp,
+    ) -> Result<(), ProgramError> {
+        match self.state {
+            ProposalState::Succeeded
+            | ProposalState::Executing
+            | ProposalState::ExecutingWithErrors => {}
+            ProposalState::Draft
+            | ProposalState::SigningOff
+            | ProposalState::Completed
+            | ProposalState::Voting
+            | ProposalState::Cancelled
+            | ProposalState::Defeated
+            | ProposalState::Vetoed => {
+                return Err(GovernanceError::InvalidStateCannotExecuteTransaction.into())
+            }
+        }
+
+        if self.options[proposal_versioned_transaction_data.option_index as usize].vote_result
+            != OptionVoteResult::Succeeded
+        {
+            return Err(GovernanceError::CannotExecuteDefeatedOption.into());
+        }
+
+        if self
+            .voting_completed_at
+            .unwrap()
+            .checked_add(governance_config.min_transaction_hold_up_time as i64)
+            .unwrap()
+            >= current_unix_timestamp
+        {
+            return Err(GovernanceError::CannotExecuteTransactionWithinHoldUpTime.into());
+        }
+
+        if proposal_versioned_transaction_data.executed_at.is_some() {
             return Err(GovernanceError::TransactionAlreadyExecuted.into());
         }
 

@@ -36,6 +36,8 @@ pub mod addins;
 pub mod cookies;
 pub mod token_2022;
 pub mod tools;
+pub mod versioned_transaction;
+pub mod mpl_core_tools;
 
 /// Program's test bench which captures test context, rent and payer and common
 /// utility functions

@@ -196,6 +196,8 @@ pub fn is_realm_account_type(account_type: &GovernanceAccountType) -> bool {
         | GovernanceAccountType::SignatoryRecordV2
         | GovernanceAccountType::ProposalInstructionV1
         | GovernanceAccountType::ProposalTransactionV2
+        | GovernanceAccountType::ProposalVersionedTransaction
+        | GovernanceAccountType::ProposalTransactionBuffer
         | GovernanceAccountType::VoteRecordV1
         | GovernanceAccountType::VoteRecordV2
         | GovernanceAccountType::ProgramMetadata

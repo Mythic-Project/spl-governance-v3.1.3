@@ -16,6 +16,8 @@ use {
             proposal::{get_proposal_address, VoteType},
             proposal_deposit::get_proposal_deposit_address,
             proposal_transaction::{get_proposal_transaction_address, InstructionData},
+            proposal_transaction_buffer::get_proposal_transaction_buffer_address,
+            proposal_versioned_transaction::get_proposal_versioned_transaction_address,
             realm::{
                 get_governing_token_holding_address, get_realm_address,
                 GoverningTokenConfigAccountArgs, GoverningTokenConfigArgs, RealmConfigArgs,
@@ -450,10 +452,7 @@ pub enum GovernanceInstruction {
     ///   9. `[]` RealmConfig account.
     ///     * PDA seeds: ['realm-config', realm]
     ///   10. `[]` Optional Voter Weight Record
-    #[deprecated(
-        since = "3.1.1",
-        note = "please use `CreateGovernance` instead"
-    )]
+    #[deprecated(since = "3.1.1", note = "please use `CreateGovernance` instead")]
     CreateMintGovernance {
         #[allow(dead_code)]
         /// Governance config
@@ -485,10 +484,7 @@ pub enum GovernanceInstruction {
     ///   9. `[]` RealmConfig account.
     ///     * PDA seeds: ['realm-config', realm]
     ///   10. `[]` Optional Voter Weight Record
-    #[deprecated(
-        since = "3.1.1",
-        note = "please use `CreateGovernance` instead"
-    )]
+    #[deprecated(since = "3.1.1", note = "please use `CreateGovernance` instead")]
     CreateTokenGovernance {
         #[allow(dead_code)]
         /// Governance config
@@ -674,6 +670,139 @@ pub enum GovernanceInstruction {
     ///  2. `[writable]` Beneficiary Account which would receive lamports from
     ///     the disposed RequiredSignatory Account
     RemoveRequiredSignatory,
+
+    /// Creates a Transaction Buffer with a set of instructions for the Proposal
+    /// at the given index position New Transaction must be inserted at the
+    /// end of the range indicated by Proposal transactions_next_index
+    ///   0. `[]` Governance account
+    ///   1. `[writable]` Proposal account
+    ///   2. `[]` TokenOwnerRecord account of the Proposal owner
+    ///   3. `[signer]` Governance Authority (Token Owner or Governance
+    ///      Delegate)
+    ///   4. `[writable]` ProposalTransactionBuffer, account.
+    ///     * PDA seeds: ['transaction_buffer', proposal, creator, buffer_index]
+    ///   5. `[signer]` Payer
+    ///   6. `[]` System program
+    ///   7. `[]` Rent sysvar
+    CreateTransactionBuffer {
+        /// Index of the buffer account to seed the account derivation
+        buffer_index: u8,
+        /// Hash of the final assembled transaction message.
+        final_buffer_hash: [u8; 32],
+        /// Final size of the buffer.
+        final_buffer_size: u16,
+        /// Initial slice of the buffer.
+        buffer: Vec<u8>,
+    },
+
+    /// Extend a Transaction Buffer with a set of instructions for the Proposal
+    /// at the given index position New Transaction must be inserted at the
+    /// end of the range indicated by Proposal transactions_next_index
+    ///   0. `[]` Governance account
+    ///   1. `[]` Proposal account
+    ///   2. `[writable]` ProposalTransactionBuffer, account.
+    ///     * PDA seeds: ['transaction_buffer', proposal, creator, buffer_index]
+    ///   3. `[signer]` Creator
+    ExtendTransactionBuffer {
+        /// Index of the buffer account to seed the account derivation
+        buffer_index: u8,
+        /// Initial slice of the buffer.
+        buffer: Vec<u8>,
+    },
+
+    /// Closes a Transaction Buffer
+    ///   1. `[writable]` Proposal account
+    ///   2. `[]` TokenOwnerRecord account of the Proposal owner
+    ///   3. `[signer]` Governance Authority (Token Owner or Governance
+    ///      Delegate)
+    ///   4. `[writable]` ProposalTransactionBuffer, account.
+    ///     * PDA seeds: ['transaction_buffer', proposal, creator, buffer_index]
+    ///   5. `[signer]` Benificiary
+    CloseTransactionBuffer {
+        /// Index of the buffer account to seed the account derivation
+        buffer_index: u8,
+    },
+
+    /// Creates a Versioned Transaction from Buffer Transaction for the Proposal
+    /// at the given index position New Transaction must be inserted at the
+    /// end of the range indicated by Proposal transactions_next_index
+    ///   0. `[]` Governance account
+    ///   1. `[writable]` Proposal account
+    ///   2. `[]` TokenOwnerRecord account of the Proposal owner
+    ///   3. `[signer]` Governance Authority (Token Owner or Governance
+    ///      Delegate)
+    ///   4. `[writable]` ProposalVersionedTransaction, account.
+    ///     * PDA seeds: ['version_transaction', proposal, option_index,
+    ///       instruction_index]
+    ///   5. `[writable]` ProposalTransactionBuffer, account.
+    ///     * PDA seeds: ['transaction_buffer', proposal, creator, buffer_index]
+    ///   6. `[signer]` Payer
+    ///   7. `[]` System program
+    ///   8. `[]` Rent sysvar
+    InsertVersionedTransactionFromBuffer {
+        /// The index of the option the transaction is for
+        option_index: u8,
+        /// Number of ephemeral signing PDAs required by the transaction.
+        ephemeral_signers: u8,
+        /// The index of the transaction in the proposal
+        transaction_index: u16,
+    },
+
+    /// Creates a Versioned Transaction for the Proposal at the
+    /// given index position New Transaction must be inserted at the end of
+    /// the range indicated by Proposal transactions_next_index
+    ///   0. `[]` Governance account
+    ///   1. `[writable]` Proposal account
+    ///   2. `[]` TokenOwnerRecord account of the Proposal owner
+    ///   3. `[signer]` Governance Authority (Token Owner or Governance
+    ///      Delegate)
+    ///   4. `[writable]` ProposalVersionedTransaction, account.
+    ///     * PDA seeds: ['version_transaction', proposal, option_index,
+    ///       instruction_index]
+    ///   5. `[signer]` Payer
+    ///   6. `[]` System program
+    ///   7. `[]` Rent sysvar
+    InsertVersionedTransaction {
+        /// The index of the option the transaction is for
+        option_index: u8,
+        /// Number of ephemeral signing PDAs required by the transaction.
+        ephemeral_signers: u8,
+        /// The index of the transaction in the proposal
+        transaction_index: u16,
+        /// The transaction message in bytes
+        transaction_message: Vec<u8>,
+    },
+
+    /// Executes a Versioned Transaction in the Proposal
+    /// Anybody can execute transaction once Proposal has been voted Yes and
+    /// transaction_hold_up time has passed The actual transaction being
+    /// executed will be signed by Governance PDA the Proposal belongs to
+    /// For example to execute Program upgrade the ProgramGovernance PDA would
+    /// be used as the signer
+    ///
+    ///   0. `[]` Governance account
+    ///   1. `[writable]` Proposal account
+    ///   2. `[writable]` ProposalVersionedTransaction account you wish to
+    ///      execute
+    ///   `remaining_accounts` must include the following accounts in the exact
+    /// order:
+    ///    1. AddressLookupTable accounts in the order they appear in
+    ///       `message.address_table_lookups`.
+    ///    2. Accounts in the order they appear in `message.account_keys`.
+    ///    3. Accounts in the order they appear in
+    ///       `message.address_table_lookups`.
+    ExecuteVersionedTransaction,
+
+    /// Removes Versioned Transaction from the Proposal
+    ///
+    ///   0. `[writable]` Proposal account
+    ///   1. `[]` TokenOwnerRecord account of the Proposal owner
+    ///   2. `[signer]` Governance Authority (Token Owner or Governance
+    ///      Delegate)
+    ///   3. `[writable]` ProposalVersionedTransaction account
+    ///   4. `[writable]` Beneficiary Account which would receive lamports from
+    ///      the disposed ProposalVersionedTransaction account
+    RemoveVersionedTransaction,
 }
 
 /// Creates CreateRealm instruction
@@ -800,7 +929,6 @@ pub fn deposit_governing_tokens(
         ),
         AccountMeta::new_readonly(realm_config_address, false),
     ];
-
 
     // needed for transfer_checked instruction
     if is_token_2022 {
@@ -998,10 +1126,7 @@ pub fn create_program_governance(
 
 /// Creates CreateMintGovernance
 #[allow(clippy::too_many_arguments)]
-#[deprecated(
-    since = "3.1.1",
-    note = "Please use `create_governance` instead"
-)]
+#[deprecated(since = "3.1.1", note = "Please use `create_governance` instead")]
 pub fn create_mint_governance(
     program_id: &Pubkey,
     // Accounts
@@ -1054,10 +1179,7 @@ pub fn create_mint_governance(
 
 /// Creates CreateTokenGovernance instruction
 #[allow(clippy::too_many_arguments)]
-#[deprecated(
-    since = "3.1.1",
-    note = "Please use `create_governance` instead"
-)]
+#[deprecated(since = "3.1.1", note = "Please use `create_governance` instead")]
 pub fn create_token_governance(
     program_id: &Pubkey,
     // Accounts
@@ -1962,8 +2084,8 @@ pub fn complete_proposal(
     }
 }
 
-
-/// Creates DepositGoverningTokens with extra account metas instruction for token hook extension
+/// Creates DepositGoverningTokens with extra account metas instruction for
+/// token hook extension
 #[allow(clippy::too_many_arguments)]
 pub fn deposit_governing_tokens_with_extra_account_metas(
     program_id: &Pubkey,
@@ -2015,7 +2137,8 @@ pub fn deposit_governing_tokens_with_extra_account_metas(
     }
 }
 
-/// Creates WithdrawGoverningTokens with extra account metas instruction for token hook extension
+/// Creates WithdrawGoverningTokens with extra account metas instruction for
+/// token hook extension
 pub fn withdraw_governing_tokens_with_extra_account_metas(
     program_id: &Pubkey,
     // Accounts
@@ -2052,6 +2175,285 @@ pub fn withdraw_governing_tokens_with_extra_account_metas(
     accounts.extend(extra_account_metas);
 
     let instruction = GovernanceInstruction::WithdrawGoverningTokens {};
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+/// Creates CreateTransactionBuffer instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_transaction_buffer(
+    program_id: &Pubkey,
+    // Accounts
+    governance: &Pubkey,
+    proposal: &Pubkey,
+    token_owner_record: &Pubkey,
+    governance_authority: &Pubkey,
+    payer: &Pubkey,
+    // Args
+    buffer_index: u8,
+    final_buffer_hash: [u8; 32],
+    final_buffer_size: u16,
+    buffer: Vec<u8>,
+) -> Instruction {
+    let proposal_transaction_buffer_address = get_proposal_transaction_buffer_address(
+        program_id,
+        proposal,
+        payer,
+        &buffer_index.to_le_bytes(),
+    );
+
+    let accounts = vec![
+        AccountMeta::new_readonly(*governance, false),
+        AccountMeta::new(*proposal, false),
+        AccountMeta::new_readonly(*token_owner_record, false),
+        AccountMeta::new_readonly(*governance_authority, true),
+        AccountMeta::new(proposal_transaction_buffer_address, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    let instruction = GovernanceInstruction::CreateTransactionBuffer {
+        buffer_index,
+        final_buffer_hash,
+        final_buffer_size,
+        buffer,
+    };
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+/// Creates ExtendTransactionBuffer instruction
+#[allow(clippy::too_many_arguments)]
+pub fn extend_transaction_buffer(
+    program_id: &Pubkey,
+    governance: &Pubkey,
+    proposal: &Pubkey,
+    payer: &Pubkey,
+    // Args
+    buffer_index: u8,
+    buffer: Vec<u8>,
+) -> Instruction {
+    let proposal_transaction_buffer_address = get_proposal_transaction_buffer_address(
+        program_id,
+        proposal,
+        payer,
+        &buffer_index.to_le_bytes(),
+    );
+
+    let accounts = vec![
+        AccountMeta::new_readonly(*governance, false),
+        AccountMeta::new_readonly(*proposal, false),
+        AccountMeta::new(proposal_transaction_buffer_address, false),
+        AccountMeta::new_readonly(*payer, true),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    let instruction = GovernanceInstruction::ExtendTransactionBuffer {
+        buffer_index,
+        buffer,
+    };
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+/// Creates CloseTransactionBuffer instruction
+#[allow(clippy::too_many_arguments)]
+pub fn close_transaction_buffer(
+    program_id: &Pubkey,
+    governance: &Pubkey,
+    proposal: &Pubkey,
+    governance_authority: &Pubkey,
+    token_owner_record: &Pubkey,
+    beneficiary: &Pubkey,
+    // Args
+    buffer_index: u8,
+) -> Instruction {
+    let proposal_transaction_buffer_address = get_proposal_transaction_buffer_address(
+        program_id,
+        proposal,
+        beneficiary,
+        &buffer_index.to_le_bytes(),
+    );
+
+    let accounts = vec![
+        AccountMeta::new_readonly(*governance, false),
+        AccountMeta::new_readonly(*proposal, false),
+        AccountMeta::new_readonly(*token_owner_record, false),
+        AccountMeta::new_readonly(*governance_authority, true),
+        AccountMeta::new(proposal_transaction_buffer_address, false),
+        AccountMeta::new(*beneficiary, true),
+    ];
+
+    let instruction = GovernanceInstruction::CloseTransactionBuffer { buffer_index };
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+/// Creates InsertVersionedTransactionFromBuffer instruction
+#[allow(clippy::too_many_arguments)]
+pub fn insert_versioned_transaction_from_buffer(
+    program_id: &Pubkey,
+    governance: &Pubkey,
+    proposal: &Pubkey,
+    token_owner_record: &Pubkey,
+    governance_authority: &Pubkey,
+    payer: &Pubkey,
+    // Args
+    option_index: u8,
+    ephemeral_signers: u8,
+    transaction_index: u16,
+    buffer_index: u8,
+) -> Instruction {
+    // Get PDA addresses
+    let proposal_versioned_tx_address = get_proposal_versioned_transaction_address(
+        program_id,
+        proposal,
+        &option_index.to_le_bytes(),
+        &transaction_index.to_le_bytes(),
+    );
+
+    let proposal_transaction_buffer_address = get_proposal_transaction_buffer_address(
+        program_id,
+        proposal,
+        payer,
+        &buffer_index.to_le_bytes(),
+    );
+
+    let accounts = vec![
+        AccountMeta::new_readonly(*governance, false),
+        AccountMeta::new(*proposal, false),
+        AccountMeta::new_readonly(*token_owner_record, false),
+        AccountMeta::new_readonly(*governance_authority, true),
+        AccountMeta::new(proposal_versioned_tx_address, false),
+        AccountMeta::new(proposal_transaction_buffer_address, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    let instruction = GovernanceInstruction::InsertVersionedTransactionFromBuffer {
+        option_index,
+        ephemeral_signers,
+        transaction_index,
+    };
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+/// Creates InsertVersionedTransaction instruction
+#[allow(clippy::too_many_arguments)]
+pub fn insert_versioned_transaction(
+    program_id: &Pubkey,
+    governance: &Pubkey,
+    proposal: &Pubkey,
+    token_owner_record: &Pubkey,
+    governance_authority: &Pubkey,
+    payer: &Pubkey,
+    // Args
+    option_index: u8,
+    ephemeral_signers: u8,
+    transaction_index: u16,
+    transaction_message: Vec<u8>,
+) -> Instruction {
+    // Get PDA address for the versioned transaction
+    let proposal_versioned_tx_address = get_proposal_versioned_transaction_address(
+        program_id,
+        proposal,
+        &option_index.to_le_bytes(),
+        &transaction_index.to_le_bytes(),
+    );
+
+    let accounts = vec![
+        AccountMeta::new_readonly(*governance, false),
+        AccountMeta::new(*proposal, false),
+        AccountMeta::new_readonly(*token_owner_record, false),
+        AccountMeta::new_readonly(*governance_authority, true),
+        AccountMeta::new(proposal_versioned_tx_address, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    let instruction = GovernanceInstruction::InsertVersionedTransaction {
+        option_index,
+        ephemeral_signers,
+        transaction_index,
+        transaction_message,
+    };
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+/// Creates ExecuteVersionedTransaction instruction
+#[allow(clippy::too_many_arguments)]
+pub fn execute_versioned_transaction(
+    program_id: &Pubkey,
+    governance: &Pubkey,
+    proposal: &Pubkey,
+    proposal_versioned_transaction: &Pubkey,
+    // Note: remaining_accounts has to be added during instruction creation
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new_readonly(*governance, false),
+        AccountMeta::new(*proposal, false),
+        AccountMeta::new(*proposal_versioned_transaction, false),
+    ];
+
+    let instruction = GovernanceInstruction::ExecuteVersionedTransaction;
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: borsh::to_vec(&instruction).unwrap(),
+    }
+}
+
+/// Creates RemoveVersionedTransaction instruction
+#[allow(clippy::too_many_arguments)]
+pub fn remove_versioned_transaction(
+    program_id: &Pubkey,
+    // Accounts
+    proposal: &Pubkey,
+    token_owner_record: &Pubkey,
+    governance_authority: &Pubkey,
+    proposal_versioned_transaction: &Pubkey,
+    beneficiary: &Pubkey,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*proposal, false),
+        AccountMeta::new_readonly(*token_owner_record, false),
+        AccountMeta::new_readonly(*governance_authority, true),
+        AccountMeta::new(*proposal_versioned_transaction, false),
+        AccountMeta::new(*beneficiary, false),
+    ];
+
+    let instruction = GovernanceInstruction::RemoveVersionedTransaction;
 
     Instruction {
         program_id: *program_id,

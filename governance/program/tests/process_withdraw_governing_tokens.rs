@@ -720,9 +720,9 @@ async fn test_withdraw_community_2022_tokens_with_token_owner_record_address_mis
 async fn test_withdraw_governing_token_2022_tokens_with_unrelinquished_votes_error() {
     // Arrange
     let mut governance_test = GovernanceProgramTest::start_new().await;
-    let governed_account_cookie = governance_test.with_governed_account().await;
 
     let realm_cookie = governance_test.with_realm_token_2022().await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
 
     let token_owner_record_cookie = governance_test
         .with_community_2022_token_deposit(&realm_cookie)
@@ -762,9 +762,9 @@ async fn test_withdraw_governing_token_2022_tokens_with_unrelinquished_votes_err
 async fn test_withdraw_governing_token_2022_tokens_after_relinquishing_vote() {
     // Arrange
     let mut governance_test = GovernanceProgramTest::start_new().await;
-    let governed_account_cookie = governance_test.with_governed_account().await;
 
     let realm_cookie = governance_test.with_realm_token_2022().await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
 
     let token_owner_record_cookie = governance_test
         .with_community_2022_token_deposit(&realm_cookie)
@@ -865,9 +865,9 @@ async fn test_withdraw_token_2022_tokens_with_malicious_holding_account_error() 
 async fn test_withdraw_governing_token_2022_tokens_with_outstanding_proposals_error() {
     // Arrange
     let mut governance_test = GovernanceProgramTest::start_new().await;
-    let governed_account_cookie = governance_test.with_governed_account().await;
 
     let realm_cookie = governance_test.with_realm_token_2022().await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
 
     let token_owner_record_cookie = governance_test
         .with_community_2022_token_deposit(&realm_cookie)
@@ -902,9 +902,9 @@ async fn test_withdraw_governing_token_2022_tokens_with_outstanding_proposals_er
 async fn test_withdraw_governing_token_2022_tokens_after_proposal_cancelled() {
     // Arrange
     let mut governance_test = GovernanceProgramTest::start_new().await;
-    let governed_account_cookie = governance_test.with_governed_account().await;
 
     let realm_cookie = governance_test.with_realm_token_2022().await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
 
     let token_owner_record_cookie = governance_test
         .with_community_2022_token_deposit(&realm_cookie)

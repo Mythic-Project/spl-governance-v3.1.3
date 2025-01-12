@@ -210,3 +210,22 @@ pub struct NativeTreasuryCookie {
     pub address: Pubkey,
     pub account: NativeTreasury,
 }
+
+
+#[allow(dead_code)]
+#[derive(Debug)]
+pub struct ProposalTransactionBufferCookie {
+    pub address: Pubkey,
+    pub buffer_index: u8,
+
+    pub buffer: Vec<u8>,
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+pub struct ProposalVersionedTransactionCookie {
+    pub address: Pubkey,
+    pub option_index: u8,
+
+    pub transaction_index: u16,
+}
