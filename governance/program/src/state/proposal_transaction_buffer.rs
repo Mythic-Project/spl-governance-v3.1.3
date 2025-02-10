@@ -96,11 +96,11 @@ impl ProposalTransactionBuffer {
 
     /// Check to make validate the size of buffer of the transaction buffer
     pub fn invariant(&self) -> Result<(), ProgramError> {
-        if self.final_buffer_size as usize >= MAX_BUFFER_SIZE {
+        if self.final_buffer_size as usize > MAX_BUFFER_SIZE {
             msg!("Current final buffer size: {}", self.final_buffer_size);
             return Err(GovernanceError::FinalBufferSizeExceeded.into());
         }
-        if self.buffer.len() >= MAX_BUFFER_SIZE {
+        if self.buffer.len() > MAX_BUFFER_SIZE {
             msg!("Current buffer size: {}", self.buffer.len());
             return Err(GovernanceError::FinalBufferSizeExceeded.into());
         }
