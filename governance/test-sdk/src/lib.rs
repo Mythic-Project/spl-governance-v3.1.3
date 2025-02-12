@@ -532,7 +532,7 @@ impl ProgramTestBench {
             .unwrap();
     }
 
-    /// Sets spl-token program account (Mint or TokenAccount) authority
+    /// Sets spl-token-2022 program account (Mint or TokenAccount) authority
     pub async fn set_spl_token_2022_account_authority(
         &mut self,
         account: &Pubkey,

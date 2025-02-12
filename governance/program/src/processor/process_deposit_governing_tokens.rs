@@ -121,7 +121,8 @@ pub fn process_deposit_governing_tokens(
     // Ensures accurate token amount after fee deduction to be stored in the TokenOwnerRecord
     let deposit_amount = match expected_mint_info {
         Some(mint_info) => {
-            amount.checked_sub(get_current_mint_fee(mint_info, amount)?).unwrap()
+            amount.checked_sub(get_current_mint_fee(mint_info, amount)?)
+            .ok_or(GovernanceError::MathematicalOverflow)?
         }
         _ => {
             amount
