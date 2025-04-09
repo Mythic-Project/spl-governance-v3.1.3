@@ -13,5 +13,3 @@ pub mod ephermal_signers;
 pub mod executable_transaction_message;
 
 pub mod transaction_message;
-
-pub mod small_vec;
