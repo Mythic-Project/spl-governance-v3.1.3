@@ -61,7 +61,7 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
             .enumerate()
             .map(|(index, maybe_lookup_table)| {
                 // The lookup table account must be owned by SolanaAddressLookupTableProgram.
-                if maybe_lookup_table.owner == &address_lookup_table::program::ID {
+                if maybe_lookup_table.owner != &address_lookup_table::program::ID {
                     return Err(GovernanceError::InvalidLookupTableAccountOwner.into());
                 }
                 // The lookup table must be mentioned in `message.address_table_lookups` at the
@@ -70,7 +70,7 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
                     .address_table_lookups
                     .get(index)
                     .map(|lookup| &lookup.account_key)
-                    == Some(maybe_lookup_table.key)
+                    != Some(maybe_lookup_table.key)
                 {
                     return Err(GovernanceError::InvalidLookupTableAccountKey.into());
                 }
@@ -158,8 +158,8 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
                     .get(usize::from(*index_in_lookup_table))
                     .ok_or(GovernanceError::MissingAddressInLookuptable)?;
 
-                if loaded_account_info.key.eq(pubkey_from_lookup_table) {
-                    msg!("Loaded account should does not match pubkey from lookup table");
+                if !loaded_account_info.key.eq(pubkey_from_lookup_table) {
+                    msg!("Loaded account does not match pubkey from lookup table");
                     return Err(GovernanceError::InvalidAccountFound.into());
                 }
 
