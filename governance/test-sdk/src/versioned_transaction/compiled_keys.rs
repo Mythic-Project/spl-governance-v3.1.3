@@ -10,8 +10,8 @@ use solana_program::pubkey::Pubkey;
 /// A helper struct to collect pubkeys compiled for a set of instructions
 ///
 /// NOTE: The only difference between this and the original implementation from `solana_program` is that we don't mark the instruction programIds as invoked.
-// /// It makes sense to do because the instructions will be called via CPI, so the programIds can come from Address Lookup Tables.
-// /// This allows to compress the message size and avoid hitting the tx size limit during `vault_transaction_create` instruction calls.
+/// It makes sense to do because the instructions will be called via CPI, so the programIds can come from Address Lookup Tables.
+/// This allows to compress the message size and avoid hitting the tx size limit during `process_insert_proposal_versioned_transaction_from_buffer` instruction calls.
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct CompiledKeys {
     payer: Option<Pubkey>,

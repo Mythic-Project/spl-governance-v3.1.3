@@ -37,8 +37,11 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
     /// `message_account_infos` - AccountInfo's that are expected to be
     /// mentioned in the message. `address_lookup_table_account_infos` -
     /// AccountInfo's that are expected to correspond to the lookup tables
-    /// mentioned in `message.address_table_lookups`. `vault_pubkey` - The
-    /// vault PDA that is expected to sign the message.
+    /// mentioned in `message.address_table_lookups`. `native_treasury_pubkey` - The
+    /// native_treasury_pubkey PDA that is expected to sign the message.
+    /// `governance_pubkey` - The governance PDA that is expected to sign the
+    /// message. `ephemeral_signer_pdas` - The ephemeral signer PDAs that are
+    /// expected to sign the message.
     pub fn new_validated(
         message: ProposalTransactionMessage,
         message_account_infos: &'a [AccountInfo<'info>],
@@ -92,7 +95,7 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
                 return Err(GovernanceError::InvalidAccountFoundInMessage.into());
             }
             // If the account is marked as signer in the message, it must be a signer in the
-            // account infos too. Unless it's a vault or an ephemeral signer
+            // account infos too. Unless it's a native_treasury or governance_pubkey or an ephemeral signer
             // PDA, as they cannot be passed as signers to `remaining_accounts`,
             // because they are PDA's and can't sign the transaction.
             if message.is_signer_index(i)
