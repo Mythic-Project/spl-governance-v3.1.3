@@ -42,6 +42,10 @@ pub fn process_close_transaction_buffer(
 
     let beneficiary_info = next_account_info(account_info_iter)?; // 5
 
+    if !beneficiary_info.is_signer {
+        return Err(GovernanceError::TransactionCreatorMustSign.into());
+    }
+    
     if proposal_transaction_buffer_info.data_is_empty() {
         return Err(GovernanceError::TransactionBufferAlreadyExists.into());
     }

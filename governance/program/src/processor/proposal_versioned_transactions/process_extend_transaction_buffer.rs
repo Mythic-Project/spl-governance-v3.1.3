@@ -40,7 +40,7 @@ pub fn process_extend_transaction_buffer(
     if !creator_info.is_signer {
         return Err(GovernanceError::TransactionCreatorMustSign.into());
     }
-    
+
     // proposal transaction buffer has to be created first
     if proposal_transaction_buffer_info.data_is_empty() {
         return Err(GovernanceError::TransactionBufferDoesNotExist.into());
