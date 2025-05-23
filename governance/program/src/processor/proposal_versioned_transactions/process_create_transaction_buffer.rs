@@ -45,6 +45,9 @@ pub fn process_create_transaction_buffer(
     let system_info = next_account_info(account_info_iter)?; // 6
     let rent = &Rent::get()?;
 
+    if !payer_info.is_signer {
+        return Err(GovernanceError::TransactionCreatorMustSign.into());
+    }
     if !proposal_transaction_buffer_info.data_is_empty() {
         return Err(GovernanceError::TransactionBufferAlreadyExists.into());
     }
