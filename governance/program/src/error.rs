@@ -601,6 +601,9 @@ pub enum GovernanceError {
     #[error("Transaction buffer does not exist")]
     TransactionBufferDoesNotExist, // 644
 
+    /// Invalid account type
+    #[error("Invalid account type")]
+    InvalidAccountType, // 645
 }
 
 impl PrintProgramError for GovernanceError {

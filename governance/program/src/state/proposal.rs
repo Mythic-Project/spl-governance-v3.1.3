@@ -1195,9 +1195,11 @@ pub fn get_proposal_data(
             reserved: [0; 64],
             reserved1: 0,
         });
+    } else if account_type == GovernanceAccountType::ProposalV2 {
+        get_account_data::<ProposalV2>(program_id, proposal_info)
+    } else {
+        return Err(GovernanceError::InvalidAccountType.into());
     }
-
-    get_account_data::<ProposalV2>(program_id, proposal_info)
 }
 
 /// Deserializes Proposal and validates it belongs to the given Governance and

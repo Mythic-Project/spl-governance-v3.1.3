@@ -363,8 +363,10 @@ pub fn get_token_owner_record_data(
             // Add the extra reserved_v2 padding
             reserved_v2: [0; 128],
         }
-    } else {
+    } else if account_type == GovernanceAccountType::TokenOwnerRecordV2 {
         get_account_data::<TokenOwnerRecordV2>(program_id, token_owner_record_info)?
+    } else {
+        return Err(GovernanceError::InvalidAccountType.into());
     };
 
     // If the deserialized account uses the old account layout indicated by the
