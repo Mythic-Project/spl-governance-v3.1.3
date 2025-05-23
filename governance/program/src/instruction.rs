@@ -683,7 +683,6 @@ pub enum GovernanceInstruction {
     ///     * PDA seeds: ['transaction_buffer', proposal, creator, buffer_index]
     ///   5. `[signer]` Payer
     ///   6. `[]` System program
-    ///   7. `[]` Rent sysvar
     CreateTransactionBuffer {
         /// Index of the buffer account to seed the account derivation
         buffer_index: u8,
@@ -738,7 +737,6 @@ pub enum GovernanceInstruction {
     ///     * PDA seeds: ['transaction_buffer', proposal, creator, buffer_index]
     ///   6. `[signer]` Payer
     ///   7. `[]` System program
-    ///   8. `[]` Rent sysvar
     InsertVersionedTransactionFromBuffer {
         /// The index of the option the transaction is for
         option_index: u8,
@@ -761,7 +759,6 @@ pub enum GovernanceInstruction {
     ///       instruction_index]
     ///   5. `[signer]` Payer
     ///   6. `[]` System program
-    ///   7. `[]` Rent sysvar
     InsertVersionedTransaction {
         /// The index of the option the transaction is for
         option_index: u8,
@@ -2214,7 +2211,6 @@ pub fn create_transaction_buffer(
         AccountMeta::new(proposal_transaction_buffer_address, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     let instruction = GovernanceInstruction::CreateTransactionBuffer {
@@ -2346,7 +2342,6 @@ pub fn insert_versioned_transaction_from_buffer(
         AccountMeta::new(proposal_transaction_buffer_address, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     let instruction = GovernanceInstruction::InsertVersionedTransactionFromBuffer {
@@ -2393,7 +2388,6 @@ pub fn insert_versioned_transaction(
         AccountMeta::new(proposal_versioned_tx_address, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     let instruction = GovernanceInstruction::InsertVersionedTransaction {
