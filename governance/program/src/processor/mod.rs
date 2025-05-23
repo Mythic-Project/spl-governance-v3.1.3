@@ -289,6 +289,7 @@ pub fn process_instruction(
         GovernanceInstruction::RemoveVersionedTransaction {} => {
             process_remove_versioned_transaction(program_id, accounts)
         }
+        #[allow(deprecated)]
         GovernanceInstruction::Legacy1
         | GovernanceInstruction::CreateProgramGovernanceDeprecated
         | GovernanceInstruction::CreateMintGovernanceDeprecated

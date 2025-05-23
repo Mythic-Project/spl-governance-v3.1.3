@@ -7,10 +7,7 @@ use {
     crate::{
         state::{
             enums::MintMaxVoterWeightSource,
-            governance::{
-                get_governance_address, get_mint_governance_address,
-                get_program_governance_address, get_token_governance_address, GovernanceConfig,
-            },
+            governance::{get_governance_address, GovernanceConfig},
             native_treasury::get_native_treasury_address,
             program_metadata::get_program_metadata_address,
             proposal::{get_proposal_address, VoteType},
@@ -29,11 +26,10 @@ use {
             token_owner_record::get_token_owner_record_address,
             vote_record::{get_vote_record_address, Vote},
         },
-        tools::{bpf_loader_upgradeable::get_program_data_address, spl_token::inline_spl_token},
+        tools::spl_token::inline_spl_token,
     },
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
     solana_program::{
-        bpf_loader_upgradeable,
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         system_program, sysvar,
@@ -407,7 +403,6 @@ pub enum GovernanceInstruction {
     ///   3+ Any extra accounts that are part of the transaction, in order
     ExecuteTransaction,
 
-    
     /// Formerly CreateMintGovernance. Exists for backwards-compatibility.
     #[deprecated(since = "3.1.1", note = "please use `CreateGovernance` instead")]
     CreateMintGovernanceDeprecated,
