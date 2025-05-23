@@ -604,6 +604,10 @@ pub enum GovernanceError {
     /// Invalid account type
     #[error("Invalid account type")]
     InvalidAccountType, // 645
+
+    /// Transaction creator must sign
+    #[error("Transaction creator must sign")]
+    TransactionCreatorMustSign, // 646
 }
 
 impl PrintProgramError for GovernanceError {
