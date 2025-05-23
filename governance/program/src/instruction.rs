@@ -710,6 +710,7 @@ pub enum GovernanceInstruction {
     },
 
     /// Closes a Transaction Buffer
+    ///   0. `[]` Governance account
     ///   1. `[writable]` Proposal account
     ///   2. `[]` TokenOwnerRecord account of the Proposal owner
     ///   3. `[signer]` Governance Authority (Token Owner or Governance
@@ -731,8 +732,7 @@ pub enum GovernanceInstruction {
     ///   3. `[signer]` Governance Authority (Token Owner or Governance
     ///      Delegate)
     ///   4. `[writable]` ProposalVersionedTransaction, account.
-    ///     * PDA seeds: ['version_transaction', proposal, option_index,
-    ///       instruction_index]
+    ///     * PDA seeds: ['version_transaction', proposal, option_index, transaction_index]
     ///   5. `[writable]` ProposalTransactionBuffer, account.
     ///     * PDA seeds: ['transaction_buffer', proposal, creator, buffer_index]
     ///   6. `[signer]` Payer
@@ -755,8 +755,7 @@ pub enum GovernanceInstruction {
     ///   3. `[signer]` Governance Authority (Token Owner or Governance
     ///      Delegate)
     ///   4. `[writable]` ProposalVersionedTransaction, account.
-    ///     * PDA seeds: ['version_transaction', proposal, option_index,
-    ///       instruction_index]
+    ///     * PDA seeds: ['version_transaction', proposal, option_index, transaction_index]
     ///   5. `[signer]` Payer
     ///   6. `[]` System program
     InsertVersionedTransaction {

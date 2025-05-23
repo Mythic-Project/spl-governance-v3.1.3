@@ -92,6 +92,7 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
             let account_info = &message_account_infos[i];
 
             if account_info.key != account_key {
+                msg!("Account {} does not match expected account key at index {}", account_info.key, i);
                 return Err(GovernanceError::InvalidAccountFoundInMessage.into());
             }
             // If the account is marked as signer in the message, it must be a signer in the
@@ -114,7 +115,7 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
             // the account infos too.
             if message.is_static_writable_index(i) {
                 if !account_info.is_writable {
-                    return Err(GovernanceError::InvalidAccountWriteable.into());
+                    return Err(GovernanceError::InvalidAccountWritable.into());
                 }
             }
             static_accounts.push(account_info);
@@ -149,7 +150,7 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
 
                 if !loaded_account_info.is_writable {
                     msg!("Loaded account should be writeable");
-                    return Err(GovernanceError::InvalidAccountWriteable.into());
+                    return Err(GovernanceError::InvalidAccountWritable.into());
                 }
 
                 // Check that the pubkey matches the one from the actual lookup table.

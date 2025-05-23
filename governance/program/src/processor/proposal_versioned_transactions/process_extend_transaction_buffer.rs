@@ -69,6 +69,7 @@ pub fn process_extend_transaction_buffer(
     );
 
     if proposal_transaction_buffer_address != *proposal_transaction_buffer_info.key {
+        msg!("Proposal transaction buffer address does not match");
         return Err(GovernanceError::InvalidAccountFound.into());
     }
 

@@ -49,8 +49,6 @@ pub fn process_create_transaction_buffer(
         return Err(GovernanceError::TransactionBufferAlreadyExists.into());
     }
 
-    // Governance account is no longer used and it's deserialized only to validate
-    // the provided account
     let _governance_data = get_governance_data(program_id, governance_info)?;
 
     let proposal_data =
@@ -74,7 +72,7 @@ pub fn process_create_transaction_buffer(
         final_buffer_size,
         buffer,
     };
-    // Calidate transaction buffer data sizes
+    // Validate transaction buffer data sizes
     proposal_transaction_buffer_data.invariant()?;
 
     create_and_serialize_account_signed::<ProposalTransactionBuffer>(

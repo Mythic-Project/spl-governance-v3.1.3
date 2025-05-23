@@ -17,6 +17,7 @@ use {
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
+        msg,
         pubkey::Pubkey,
         rent::Rent,
         sysvar::Sysvar,
@@ -81,6 +82,7 @@ pub fn process_insert_versioned_transaction_from_buffer(
         &proposal_transaction_buffer_data.buffer_index.to_le_bytes(),
     );
     if proposal_transaction_buffer_address != *proposal_transaction_buffer_info.key {
+        msg!("Proposal transaction buffer address does not match");
         return Err(GovernanceError::InvalidAccountFound.into());
     }
     proposal_transaction_buffer_data.validate_hash()?;

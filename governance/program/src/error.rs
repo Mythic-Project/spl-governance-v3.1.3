@@ -545,12 +545,12 @@ pub enum GovernanceError {
     #[error("Invalid account signer found in message")]
     InvalidAccountSigner, // 630
     
-    /// Invalid writeable account found in message
-    #[error("Invalid writeable account found in message")]
-    InvalidAccountWriteable, // 631
+    /// Invalid writable account found in message
+    #[error("Invalid writable account found in message")]
+    InvalidAccountWritable, // 631
 
-    /// Invalid account found in message
-    #[error("Invalid writeable account found in message")]
+    /// Invalid account found
+    #[error("Invalid account found")]
     InvalidAccountFound, // 632
 
     /// Account in lookuptable is missing
@@ -565,12 +565,12 @@ pub enum GovernanceError {
     #[error("TransactionMessage is malformed")]
     InvalidTransactionMessage, // 635
 
-    /// Transaction buffer already created
-    #[error("Transaction buffer already created")]
+    /// Transaction buffer already exists
+    #[error("Transaction buffer already exists")]
     TransactionBufferAlreadyExists, // 636
 
-    /// Versioned Transaction already created
-    #[error("Versioned Transaction already created")]
+    /// Versioned Transaction already exists
+    #[error("Versioned Transaction already exists")]
     VersionedTransactionAlreadyExists, // 637
 
     /// Transaction buffer unauthorized extension

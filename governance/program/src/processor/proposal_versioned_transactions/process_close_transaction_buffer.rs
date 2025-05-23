@@ -16,6 +16,7 @@ use {
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         clock::Clock,
+        msg,
         entrypoint::ProgramResult,
         pubkey::Pubkey,
         sysvar::Sysvar,
@@ -79,6 +80,7 @@ pub fn process_close_transaction_buffer(
     );
 
     if proposal_transaction_buffer_address != *proposal_transaction_buffer_info.key {
+        msg!("Proposal transaction buffer address does not match");
         return Err(GovernanceError::InvalidAccountFound.into());
     }
 
