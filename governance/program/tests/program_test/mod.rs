@@ -33,8 +33,8 @@ use {
                 ProposalState, TransactionExecutionStatus, VoteThreshold,
             },
             governance::{
-                get_governance_address, GovernanceConfig,
-                GovernanceV2, DEFAULT_DEPOSIT_EXEMPT_PROPOSAL_COUNT,
+                get_governance_address, GovernanceConfig, GovernanceV2,
+                DEFAULT_DEPOSIT_EXEMPT_PROPOSAL_COUNT,
             },
             native_treasury::{get_native_treasury_address, NativeTreasury},
             program_metadata::{get_program_metadata_address, ProgramMetadata},

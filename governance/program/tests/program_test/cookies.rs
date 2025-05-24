@@ -213,7 +213,6 @@ pub struct NativeTreasuryCookie {
     pub account: NativeTreasury,
 }
 
-
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProposalTransactionBufferCookie {

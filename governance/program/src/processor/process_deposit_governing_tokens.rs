@@ -13,7 +13,8 @@ use {
             },
         },
         tools::spl_token::{
-            get_current_mint_fee, get_spl_token_mint, is_spl_token_account, is_spl_token_mint, mint_spl_tokens_to, transfer_checked_spl_tokens, transfer_spl_tokens
+            get_current_mint_fee, get_spl_token_mint, is_spl_token_account, is_spl_token_mint,
+            mint_spl_tokens_to, transfer_checked_spl_tokens, transfer_spl_tokens,
         },
     },
     solana_program::{
@@ -68,7 +69,6 @@ pub fn process_deposit_governing_tokens(
 
     realm_config_data.assert_can_deposit_governing_token(&realm_data, &governing_token_mint)?;
 
-    
     if is_spl_token_account(governing_token_source_info) {
         // If the source is spl-token token account then transfer tokens from it
         match expected_mint_info {
@@ -81,7 +81,7 @@ pub fn process_deposit_governing_tokens(
                     amount,
                     spl_token_info,
                     mint_info,
-                    additional_accounts
+                    additional_accounts,
                 )?;
             }
             _ => {
@@ -122,12 +122,12 @@ pub fn process_deposit_governing_tokens(
     let fee = if is_spl_token_account(governing_token_source_info) {
         match expected_mint_info {
             Some(mint_info) => get_current_mint_fee(mint_info, amount)?,
-            None => 0, 
+            None => 0,
         }
     } else {
-        0 
+        0
     };
-    
+
     let deposit_amount = amount
         .checked_sub(fee)
         .ok_or(GovernanceError::MathematicalOverflow)?;

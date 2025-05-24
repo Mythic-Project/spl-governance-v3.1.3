@@ -111,7 +111,7 @@ async fn test_execute_proposal_transaction_after_flagged_with_error() {
     let mut governance_test = GovernanceProgramTest::start_new().await;
 
     let realm_cookie = governance_test.with_realm().await;
-    
+
     let governed_account_cookie = governance_test.with_governed_account().await;
 
     let token_owner_record_cookie = governance_test
@@ -210,7 +210,7 @@ async fn test_execute_second_transaction_after_first_transaction_flagged_with_er
     let mut governance_test = GovernanceProgramTest::start_new().await;
 
     let realm_cookie = governance_test.with_realm().await;
-    
+
     let governed_account_cookie = governance_test.with_governed_account().await;
 
     let token_owner_record_cookie = governance_test
@@ -227,7 +227,9 @@ async fn test_execute_second_transaction_after_first_transaction_flagged_with_er
         .await
         .unwrap();
 
-    let governed_mint_cookie = governance_test.with_governed_mint_governed_authority(&governance_cookie).await;
+    let governed_mint_cookie = governance_test
+        .with_governed_mint_governed_authority(&governance_cookie)
+        .await;
 
     let mut proposal_cookie = governance_test
         .with_proposal(&token_owner_record_cookie, &mut governance_cookie)
@@ -305,7 +307,7 @@ async fn test_flag_transaction_error_with_proposal_transaction_already_executed_
     let mut governance_test = GovernanceProgramTest::start_new().await;
 
     let realm_cookie = governance_test.with_realm().await;
-    
+
     let governed_account_cookie = governance_test.with_governed_account().await;
 
     let token_owner_record_cookie = governance_test
@@ -322,7 +324,9 @@ async fn test_flag_transaction_error_with_proposal_transaction_already_executed_
         .await
         .unwrap();
 
-    let governed_mint_cookie = governance_test.with_governed_mint_governed_authority(&governance_cookie).await;
+    let governed_mint_cookie = governance_test
+        .with_governed_mint_governed_authority(&governance_cookie)
+        .await;
 
     let mut proposal_cookie = governance_test
         .with_proposal(&token_owner_record_cookie, &mut governance_cookie)

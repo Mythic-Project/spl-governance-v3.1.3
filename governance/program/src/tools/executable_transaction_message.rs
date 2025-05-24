@@ -92,7 +92,11 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
             let account_info = &message_account_infos[i];
 
             if account_info.key != account_key {
-                msg!("Account {} does not match expected account key at index {}", account_info.key, i);
+                msg!(
+                    "Account {} does not match expected account key at index {}",
+                    account_info.key,
+                    i
+                );
                 return Err(GovernanceError::InvalidAccountFoundInMessage.into());
             }
             // If the account is marked as signer in the message, it must be a signer in the
@@ -104,7 +108,7 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
                 && account_info.key != governance_pubkey
                 && !ephemeral_signer_pdas.contains(account_info.key)
             {
-                // Verify the account is an authorized signer. 
+                // Verify the account is an authorized signer.
                 // If not, return an error with the unauthorized account's public key
                 if !account_info.is_signer {
                     msg!("Account {} is not an unexpected signer", account_info.key);
@@ -237,7 +241,7 @@ impl<'a, 'info> ExecutableTransactionMessage<'a, 'info> {
                 if account_meta.is_writable && protected_accounts.contains(&account_meta.pubkey) {
                     return Err(GovernanceError::ProtectedAccount.into());
                 }
-                
+
                 // Check for signer accounts and add seeds if needed
                 if account_meta.is_signer {
                     if account_meta.pubkey == *governance_pubkey {

@@ -100,7 +100,7 @@ pub fn process_extend_transaction_buffer(
     }
 
     let buffer_slice_extension = buffer;
-    
+
     // Extend the buffer, log if it panics
     proposal_transaction_buffer_data
         .buffer

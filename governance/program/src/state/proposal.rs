@@ -15,20 +15,24 @@ use {
             governance::GovernanceConfig,
             legacy::ProposalV1,
             proposal_transaction::ProposalTransactionV2,
-            realm::RealmV2,
             proposal_versioned_transaction::ProposalVersionedTransaction,
+            realm::RealmV2,
             realm_config::RealmConfigAccount,
             vote_record::{Vote, VoteKind},
         },
         tools::spl_token::get_spl_token_mint_supply,
         PROGRAM_AUTHORITY_SEED,
-    }, borsh::{io::Write, BorshDeserialize, BorshSchema, BorshSerialize}, solana_program::{
+    },
+    borsh::{io::Write, BorshDeserialize, BorshSchema, BorshSerialize},
+    solana_program::{
         account_info::{next_account_info, AccountInfo},
         clock::{Slot, UnixTimestamp},
         program_error::ProgramError,
         program_pack::IsInitialized,
         pubkey::Pubkey,
-    }, spl_governance_tools::account::{get_account_data, get_account_type, AccountMaxSize}, std::{cmp::Ordering, slice::Iter}
+    },
+    spl_governance_tools::account::{get_account_data, get_account_type, AccountMaxSize},
+    std::{cmp::Ordering, slice::Iter},
 };
 
 /// Proposal option vote result

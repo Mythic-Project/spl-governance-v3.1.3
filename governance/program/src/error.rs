@@ -544,7 +544,7 @@ pub enum GovernanceError {
     /// Invalid account signer found in message
     #[error("Invalid account signer found in message")]
     InvalidAccountSigner, // 630
-    
+
     /// Invalid writable account found in message
     #[error("Invalid writable account found in message")]
     InvalidAccountWritable, // 631

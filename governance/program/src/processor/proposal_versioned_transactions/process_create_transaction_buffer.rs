@@ -4,9 +4,13 @@ use {
     crate::{
         error::GovernanceError,
         state::{
-            enums::GovernanceAccountType, governance::get_governance_data, proposal::get_proposal_data_for_governance, proposal_transaction_buffer::{
+            enums::GovernanceAccountType,
+            governance::get_governance_data,
+            proposal::get_proposal_data_for_governance,
+            proposal_transaction_buffer::{
                 get_proposal_transaction_buffer_address_seeds, ProposalTransactionBuffer,
-            }, token_owner_record::get_token_owner_record_data_for_proposal_owner
+            },
+            token_owner_record::get_token_owner_record_data_for_proposal_owner,
         },
     },
     solana_program::{

@@ -49,7 +49,7 @@ pub fn process_insert_versioned_transaction(
     let payer_info = next_account_info(account_info_iter)?; // 5
     let system_info = next_account_info(account_info_iter)?; // 6
     let rent = &Rent::get()?;
-    
+
     if !proposal_versioned_transaction_info.data_is_empty() {
         return Err(GovernanceError::VersionedTransactionAlreadyExists.into());
     }

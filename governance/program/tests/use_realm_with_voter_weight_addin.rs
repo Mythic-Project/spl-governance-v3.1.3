@@ -210,7 +210,7 @@ async fn test_create_token_governance_with_voter_weight_addin() {
         .unwrap();
 
     // Act
-        let governance_cookie = governance_test
+    let governance_cookie = governance_test
         .with_governance(
             &realm_cookie,
             &governed_account_cookie,

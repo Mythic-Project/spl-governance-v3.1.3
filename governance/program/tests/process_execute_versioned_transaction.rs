@@ -3,14 +3,18 @@
 mod program_test;
 
 use {
-    program_test::*, solana_program_test::tokio, solana_sdk::{signature::Keypair, signer::Signer}, spl_governance::{
+    program_test::*,
+    solana_program_test::tokio,
+    solana_sdk::{signature::Keypair, signer::Signer},
+    spl_governance::{
         error::GovernanceError,
         state::{
             enums::{ProposalState, TransactionExecutionStatus},
             native_treasury::get_native_treasury_address,
         },
         tools::{spl_token::inline_spl_token, transaction_message::TransactionMessage},
-    }, versioned_transaction_ext::VaultTransactionMessageExt
+    },
+    versioned_transaction_ext::VaultTransactionMessageExt,
 };
 
 #[tokio::test]
@@ -443,7 +447,6 @@ async fn test_execute_versioned_transaction_with_create_proposal_and_execute_in_
         GovernanceError::CannotExecuteTransactionWithinHoldUpTime.into()
     );
 }
-
 
 #[tokio::test]
 async fn test_execute_mint_versioned_transaction_token_2022_with_extensions() {

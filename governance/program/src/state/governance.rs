@@ -730,7 +730,6 @@ mod test {
         // Act
         let size = borsh::to_vec(&governance_data).unwrap().len();
 
-
         // Assert
         assert_eq!(governance_data.get_max_size(), Some(size));
     }

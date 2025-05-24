@@ -106,7 +106,7 @@ pub fn process_insert_versioned_transaction_from_buffer(
 
     option.transactions_count = option.transactions_count.checked_add(1).unwrap();
     proposal_data.serialize(&mut proposal_info.data.borrow_mut()[..])?;
-    
+
     process_create_versioned_transaction_account(
         program_id,
         option_index,

@@ -656,11 +656,12 @@ async fn test_execute_proposal_with_multiple_options_and_partial_success() {
             &governed_account_cookie,
             &token_owner_record_cookie1,
             &governance_config,
-
         )
         .await
         .unwrap();
-    let governed_mint_cookie = governance_test.with_governed_mint_governed_authority(&governance_cookie).await;
+    let governed_mint_cookie = governance_test
+        .with_governed_mint_governed_authority(&governance_cookie)
+        .await;
 
     let mut proposal_cookie = governance_test
         .with_multi_option_proposal(

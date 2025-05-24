@@ -16,8 +16,8 @@ use {
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         clock::Clock,
-        msg,
         entrypoint::ProgramResult,
+        msg,
         pubkey::Pubkey,
         sysvar::Sysvar,
     },
@@ -45,7 +45,7 @@ pub fn process_close_transaction_buffer(
     if !beneficiary_info.is_signer {
         return Err(GovernanceError::TransactionCreatorMustSign.into());
     }
-    
+
     if proposal_transaction_buffer_info.data_is_empty() {
         return Err(GovernanceError::TransactionBufferAlreadyExists.into());
     }
@@ -58,8 +58,8 @@ pub fn process_close_transaction_buffer(
 
     let proposal_data =
         get_proposal_data_for_governance(program_id, proposal_info, governance_info.key)?;
-    
-    // Check if the proposal is in the draft stage. 
+
+    // Check if the proposal is in the draft stage.
     // even if the transaction buffer has not been inserted into the final transaction proposal
     proposal_data.assert_can_cancel(&governance_data.config, clock.unix_timestamp)?;
 
@@ -75,7 +75,7 @@ pub fn process_close_transaction_buffer(
         proposal_transaction_buffer_info,
         proposal_info.key,
     )?;
-    
+
     let proposal_transaction_buffer_address = get_proposal_transaction_buffer_address(
         program_id,
         proposal_info.key,

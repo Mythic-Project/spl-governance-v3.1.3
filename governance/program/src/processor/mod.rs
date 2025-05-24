@@ -60,7 +60,8 @@ use {
     process_withdraw_governing_tokens::*,
     proposal_versioned_transactions::*,
     solana_program::{
-        account_info::AccountInfo, borsh1::try_from_slice_unchecked, entrypoint::ProgramResult, msg, program_error::ProgramError, pubkey::Pubkey
+        account_info::AccountInfo, borsh1::try_from_slice_unchecked, entrypoint::ProgramResult,
+        msg, program_error::ProgramError, pubkey::Pubkey,
     },
 };
 
@@ -76,7 +77,6 @@ pub fn process_instruction(
     let instruction: GovernanceInstruction =
         try_from_slice_unchecked(input).map_err(|_| ProgramError::InvalidInstructionData)?;
 
-        
     // Do not dump instruction data into logs
     match instruction {
         GovernanceInstruction::InsertTransaction {
@@ -117,7 +117,6 @@ pub fn process_instruction(
             msg!("GOVERNANCE-INSTRUCTION: {:?}", instruction);
         }
     }
-
 
     match instruction {
         GovernanceInstruction::CreateRealm { name, config_args } => {
