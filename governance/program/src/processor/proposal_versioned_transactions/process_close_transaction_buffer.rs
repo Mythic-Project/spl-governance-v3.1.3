@@ -70,7 +70,7 @@ pub fn process_close_transaction_buffer(
     )?;
 
     token_owner_record_data.assert_token_owner_or_delegate_is_signer(governance_authority_info)?;
-    let proposal_transaction_buffer_data = get_proposal_transaction_buffer_data_for_proposal(
+    let _proposal_transaction_buffer_data = get_proposal_transaction_buffer_data_for_proposal(
         program_id,
         proposal_transaction_buffer_info,
         proposal_info.key,
@@ -79,7 +79,7 @@ pub fn process_close_transaction_buffer(
     let proposal_transaction_buffer_address = get_proposal_transaction_buffer_address(
         program_id,
         proposal_info.key,
-        &proposal_transaction_buffer_data.creator,
+        &beneficiary_info.key,
         &buffer_index.to_le_bytes(),
     );
 

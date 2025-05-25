@@ -50,6 +50,9 @@ pub fn process_insert_versioned_transaction(
     let system_info = next_account_info(account_info_iter)?; // 6
     let rent = &Rent::get()?;
 
+    if !payer_info.is_signer {
+        return Err(GovernanceError::TransactionCreatorMustSign.into());
+    }
     if !proposal_versioned_transaction_info.data_is_empty() {
         return Err(GovernanceError::VersionedTransactionAlreadyExists.into());
     }
