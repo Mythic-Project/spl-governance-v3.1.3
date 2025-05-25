@@ -26,7 +26,6 @@ use {
             sign_off_proposal, upgrade_program_metadata, withdraw_governing_tokens,
             withdraw_governing_tokens_with_extra_account_metas, AddSignatoryAuthority,
         },
-        processor::process_instruction,
         state::{
             enums::{
                 GovernanceAccountType, InstructionExecutionFlags, MintMaxVoterWeightSource,
@@ -198,7 +197,8 @@ impl GovernanceProgramTest {
         program_test.add_program(
             "spl_governance",
             program_id,
-            processor!(process_instruction),
+            // processor!(process_instruction),
+            None,
         );
 
         // loaded to test ephermal signers
@@ -419,7 +419,8 @@ impl GovernanceProgramTest {
             realm_setup_args
                 .community_mint_max_voter_weight_source
                 .clone(),
-            false, // is_token_2022
+            false, // is_token_2022_for_community_token
+            false, // is_token_2022_for_council_token
         );
 
         self.bench
@@ -598,7 +599,8 @@ impl GovernanceProgramTest {
             realm_setup_args
                 .community_mint_max_voter_weight_source
                 .clone(),
-            true, // is_token_2022
+            true, // is_token_2022_for_community_token
+            true, // is_token_2022_for_council_token
         );
 
         self.bench
@@ -777,7 +779,8 @@ impl GovernanceProgramTest {
             realm_setup_args
                 .community_mint_max_voter_weight_source
                 .clone(),
-            true, // is_token_2022
+            true, // is_token_2022_for_community_token
+            true, // is_token_2022_for_council_token
         );
 
         self.bench
@@ -959,7 +962,8 @@ impl GovernanceProgramTest {
             realm_setup_args
                 .community_mint_max_voter_weight_source
                 .clone(),
-            true, // is_token_2022
+            true, // is_token_2022_for_community_token
+            true, // is_token_2022_for_council_token
         );
 
         self.bench
@@ -1063,7 +1067,8 @@ impl GovernanceProgramTest {
             name.clone(),
             min_community_weight_to_create_governance,
             community_mint_max_voter_weight_source,
-            false, // is_token_2022
+            false, // is_token_2022_for_community_token
+            false, // is_token_2022_for_council_token
         );
 
         self.bench
@@ -1152,7 +1157,8 @@ impl GovernanceProgramTest {
             name.clone(),
             min_community_weight_to_create_governance,
             community_mint_max_voter_weight_source,
-            true, // is_token_2022
+            true, // is_token_2022_for_community_token
+            false, // is_token_2022_for_council_token
         );
 
         self.bench
