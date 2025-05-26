@@ -729,7 +729,8 @@ pub fn create_realm(
     name: String,
     min_community_weight_to_create_governance: u64,
     community_mint_max_voter_weight_source: MintMaxVoterWeightSource,
-    is_token_2022: bool,
+    is_token_2022_for_community: bool,
+    is_token_2022_for_council: bool,
 ) -> Instruction {
     let realm_address = get_realm_address(program_id, &name);
     let community_token_holding_address =
@@ -743,7 +744,7 @@ pub fn create_realm(
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(
-            if is_token_2022 {
+            if is_token_2022_for_community {
                 spl_token_2022::id()
             } else {
                 inline_spl_token::id()
@@ -759,6 +760,14 @@ pub fn create_realm(
 
         accounts.push(AccountMeta::new_readonly(council_token_mint, false));
         accounts.push(AccountMeta::new(council_token_holding_address, false));
+        accounts.push(AccountMeta::new_readonly(
+            if is_token_2022_for_council {
+                spl_token_2022::id()
+            } else {
+                inline_spl_token::id()
+            },
+            false,
+        ));
         true
     } else {
         false

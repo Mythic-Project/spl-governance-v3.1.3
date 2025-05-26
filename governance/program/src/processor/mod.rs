@@ -66,9 +66,9 @@ use {
 };
 
 /// Processes an instruction
-pub fn process_instruction(
+pub fn process_instruction<'a>(
     program_id: &Pubkey,
-    accounts: &[AccountInfo],
+    accounts: &'a [AccountInfo<'a>],
     input: &[u8],
 ) -> ProgramResult {
     msg!("VERSION:{:?}", env!("CARGO_PKG_VERSION"));
