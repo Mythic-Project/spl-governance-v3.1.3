@@ -196,6 +196,8 @@ pub fn is_realm_account_type(account_type: &GovernanceAccountType) -> bool {
         | GovernanceAccountType::SignatoryRecordV2
         | GovernanceAccountType::ProposalInstructionV1
         | GovernanceAccountType::ProposalTransactionV2
+        | GovernanceAccountType::ProposalVersionedTransaction
+        | GovernanceAccountType::ProposalTransactionBuffer
         | GovernanceAccountType::VoteRecordV1
         | GovernanceAccountType::VoteRecordV2
         | GovernanceAccountType::ProgramMetadata
@@ -382,9 +384,11 @@ pub fn get_realm_data(
             // Add the extra reserved_v2 padding
             reserved_v2: [0; 128],
         });
+    } else if account_type == GovernanceAccountType::RealmV2 {
+        get_account_data::<RealmV2>(program_id, realm_info)
+    } else {
+        return Err(GovernanceError::InvalidAccountType.into());
     }
-
-    get_account_data::<RealmV2>(program_id, realm_info)
 }
 
 /// Deserializes account and checks the given authority is Realm's authority

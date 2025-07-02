@@ -15,6 +15,7 @@ use {
             governance::GovernanceConfig,
             legacy::ProposalV1,
             proposal_transaction::ProposalTransactionV2,
+            proposal_versioned_transaction::ProposalVersionedTransaction,
             realm::RealmV2,
             realm_config::RealmConfigAccount,
             vote_record::{Vote, VoteKind},
@@ -880,6 +881,52 @@ impl ProposalV2 {
         Ok(())
     }
 
+    /// Checks if Instructions can be executed for the Proposal in the given
+    /// state
+    pub fn assert_can_execute_versioned_transaction(
+        &self,
+        proposal_versioned_transaction_data: &ProposalVersionedTransaction,
+        governance_config: &GovernanceConfig,
+        current_unix_timestamp: UnixTimestamp,
+    ) -> Result<(), ProgramError> {
+        match self.state {
+            ProposalState::Succeeded
+            | ProposalState::Executing
+            | ProposalState::ExecutingWithErrors => {}
+            ProposalState::Draft
+            | ProposalState::SigningOff
+            | ProposalState::Completed
+            | ProposalState::Voting
+            | ProposalState::Cancelled
+            | ProposalState::Defeated
+            | ProposalState::Vetoed => {
+                return Err(GovernanceError::InvalidStateCannotExecuteTransaction.into())
+            }
+        }
+
+        if self.options[proposal_versioned_transaction_data.option_index as usize].vote_result
+            != OptionVoteResult::Succeeded
+        {
+            return Err(GovernanceError::CannotExecuteDefeatedOption.into());
+        }
+
+        if self
+            .voting_completed_at
+            .unwrap()
+            .checked_add(governance_config.min_transaction_hold_up_time as i64)
+            .unwrap()
+            >= current_unix_timestamp
+        {
+            return Err(GovernanceError::CannotExecuteTransactionWithinHoldUpTime.into());
+        }
+
+        if proposal_versioned_transaction_data.executed_at.is_some() {
+            return Err(GovernanceError::TransactionAlreadyExecuted.into());
+        }
+
+        Ok(())
+    }
+
     /// Checks if the instruction can be flagged with error for the Proposal in
     /// the given state
     pub fn assert_can_flag_transaction_error(
@@ -1152,9 +1199,11 @@ pub fn get_proposal_data(
             reserved: [0; 64],
             reserved1: 0,
         });
+    } else if account_type == GovernanceAccountType::ProposalV2 {
+        get_account_data::<ProposalV2>(program_id, proposal_info)
+    } else {
+        return Err(GovernanceError::InvalidAccountType.into());
     }
-
-    get_account_data::<ProposalV2>(program_id, proposal_info)
 }
 
 /// Deserializes Proposal and validates it belongs to the given Governance and

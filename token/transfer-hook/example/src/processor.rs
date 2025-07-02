@@ -74,7 +74,7 @@ pub fn process_execute(
 }
 
 /// Processes a
-/// [InitializeExtraAccountMetaList](enum.TransferHookInstruction.html)
+/// [`InitializeExtraAccountMetaList`](enum.TransferHookInstruction.html)
 /// instruction.
 pub fn process_initialize_extra_account_meta_list(
     program_id: &Pubkey,
@@ -87,6 +87,13 @@ pub fn process_initialize_extra_account_meta_list(
     let mint_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
     let _system_program_info = next_account_info(account_info_iter)?;
+
+    // check that the one mint we want to target is trying to create extra
+    // account metas
+    #[cfg(feature = "forbid-additional-mints")]
+    if *mint_info.key != crate::mint::id() {
+        return Err(ProgramError::InvalidArgument);
+    }
 
     // check that the mint authority is valid without fully deserializing
     let mint_data = mint_info.try_borrow_data()?;
@@ -135,7 +142,7 @@ pub fn process_initialize_extra_account_meta_list(
 }
 
 /// Processes a
-/// [UpdateExtraAccountMetaList](enum.TransferHookInstruction.html)
+/// [`UpdateExtraAccountMetaList`](enum.TransferHookInstruction.html)
 /// instruction.
 pub fn process_update_extra_account_meta_list(
     program_id: &Pubkey,

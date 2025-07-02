@@ -13,8 +13,8 @@ use {
             },
         },
         tools::spl_token::{
-            get_spl_token_mint, is_spl_token_account, is_spl_token_mint, mint_spl_tokens_to,
-            transfer_spl_tokens,
+            get_current_mint_fee, get_spl_token_mint, is_spl_token_account, is_spl_token_mint,
+            mint_spl_tokens_to, transfer_checked_spl_tokens, transfer_spl_tokens,
         },
     },
     solana_program::{
@@ -46,6 +46,12 @@ pub fn process_deposit_governing_tokens(
     let spl_token_info = next_account_info(account_info_iter)?; // 8
     let realm_config_info = next_account_info(account_info_iter)?; // 9
 
+    let expected_mint_info = if let Ok(expected_mint_info) = next_account_info(account_info_iter) {
+        Some(expected_mint_info)
+    } else {
+        None
+    }; // 10 if using spl-token-2022
+
     let rent = Rent::get()?;
 
     let realm_data = get_realm_data(program_id, realm_info)?;
@@ -65,13 +71,32 @@ pub fn process_deposit_governing_tokens(
 
     if is_spl_token_account(governing_token_source_info) {
         // If the source is spl-token token account then transfer tokens from it
-        transfer_spl_tokens(
-            governing_token_source_info,
-            governing_token_holding_info,
-            governing_token_source_authority_info,
-            amount,
-            spl_token_info,
-        )?;
+        match expected_mint_info {
+            Some(mint_info) => {
+                let additional_accounts = account_info_iter.as_slice();
+                transfer_checked_spl_tokens(
+                    governing_token_source_info,
+                    governing_token_holding_info,
+                    governing_token_source_authority_info,
+                    amount,
+                    spl_token_info,
+                    mint_info,
+                    additional_accounts,
+                )?;
+            }
+            _ => {
+                // Maintain backwards compatibility
+                // Token-2022 requires transfer_checked method with mint
+                // Downstream the instruction will fail if the data supplied is invalid
+                transfer_spl_tokens(
+                    governing_token_source_info,
+                    governing_token_holding_info,
+                    governing_token_source_authority_info,
+                    amount,
+                    spl_token_info,
+                )?;
+            }
+        }
     } else if is_spl_token_mint(governing_token_source_info) {
         // If it's a mint then mint the tokens
         mint_spl_tokens_to(
@@ -91,6 +116,22 @@ pub fn process_deposit_governing_tokens(
         governing_token_owner_info.key,
     );
 
+    // Adjust deposit amount to account for transfer fees
+    // Fee calculation requires to be on-chain due to epoch clock requirement
+    // Ensures accurate token amount after fee deduction to be stored in the TokenOwnerRecord
+    let fee = if is_spl_token_account(governing_token_source_info) {
+        match expected_mint_info {
+            Some(mint_info) => get_current_mint_fee(mint_info, amount)?,
+            None => 0,
+        }
+    } else {
+        0
+    };
+
+    let deposit_amount = amount
+        .checked_sub(fee)
+        .ok_or(GovernanceError::MathematicalOverflow)?;
+
     if token_owner_record_info.data_is_empty() {
         // Deposited tokens can only be withdrawn by the owner so let's make sure the
         // owner signed the transaction
@@ -102,7 +143,7 @@ pub fn process_deposit_governing_tokens(
             account_type: GovernanceAccountType::TokenOwnerRecordV2,
             realm: *realm_info.key,
             governing_token_owner: *governing_token_owner_info.key,
-            governing_token_deposit_amount: amount,
+            governing_token_deposit_amount: deposit_amount,
             governing_token_mint,
             governance_delegate: None,
             unrelinquished_votes_count: 0,
@@ -131,7 +172,7 @@ pub fn process_deposit_governing_tokens(
 
         token_owner_record_data.governing_token_deposit_amount = token_owner_record_data
             .governing_token_deposit_amount
-            .checked_add(amount)
+            .checked_add(deposit_amount)
             .unwrap();
 
         token_owner_record_data.serialize(&mut token_owner_record_info.data.borrow_mut()[..])?;

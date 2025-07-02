@@ -143,7 +143,6 @@ pub fn create_and_serialize_account_with_owner_signed<'a, T: BorshSerialize + Ac
         let account_size = serialized_data.len();
         (Some(serialized_data), account_size)
     };
-
     let mut signers_seeds = account_address_seeds.to_vec();
     let bump = &[bump_seed];
     signers_seeds.push(bump);

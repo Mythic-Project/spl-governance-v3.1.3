@@ -1,5 +1,11 @@
 # SPL Governance Changelog
 
+## v3.1.2 - 
+
+- Add deprecated warning for create_mint_governance() and create_token_governance() (it will be removed in v4.0.0)
+- Add SPL Token 2022 support
+- Add VersionedTransaction support for proposals
+
 ## v3.1.1 - 25 Apr 2022
 
 - Weighted multi choice voting

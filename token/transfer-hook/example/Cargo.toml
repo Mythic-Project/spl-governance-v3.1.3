@@ -8,16 +8,18 @@ license = "Apache-2.0"
 edition = "2021"
 
 [features]
+default = ["forbid-additional-mints"]
 no-entrypoint = []
 test-sbf = []
+forbid-additional-mints = []
 
 [dependencies]
-arrayref = "0.3.7"
+arrayref = "0.3.9"
 solana-program = { workspace = true }
-spl-tlv-account-resolution = { version = "0.5" , path = "../../../libraries/tlv-account-resolution" }
-spl-token-2022 = { version = "1.0",  path = "../../program-2022", features = ["no-entrypoint"] }
-spl-transfer-hook-interface = { version = "0.4" , path = "../interface" }
-spl-type-length-value = { version = "0.3" , path = "../../../libraries/type-length-value" }
+spl-tlv-account-resolution = { workspace = true }
+spl-token-2022 = { workspace = true }
+spl-transfer-hook-interface = { workspace = true }
+spl-type-length-value = "0.7.0"
 
 [dev-dependencies]
 solana-program-test = { workspace = true }
