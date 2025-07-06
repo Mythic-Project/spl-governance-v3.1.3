@@ -12,7 +12,6 @@ pub mod proposal_transaction_buffer;
 pub mod proposal_versioned_transaction;
 pub mod realm;
 pub mod realm_config;
-pub mod required_signatory;
 pub mod signatory_record;
 pub mod token_owner_record;
 pub mod vote_record;

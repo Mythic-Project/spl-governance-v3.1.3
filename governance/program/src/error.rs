@@ -504,114 +504,102 @@ pub enum GovernanceError {
     /// Invalid multi choice proposal parameters
     #[error("Invalid multi choice proposal parameters")]
     InvalidMultiChoiceProposalParameters, // 620
-
-    /// Invalid Governance for RequiredSignatory
-    #[error("Invalid Governance for RequiredSignatory")]
-    InvalidGovernanceForRequiredSignatory, // 621
-
-    /// SignatoryRecord already exists
-    #[error("Signatory Record has already been created")]
-    SignatoryRecordAlreadyExists, // 622
-
+    
     /// Instruction has been removed
     #[error("Instruction has been removed")]
-    InstructionDeprecated, // 623
-
-    /// Proposal is missing signatories required by its governance
-    #[error("Proposal is missing required signatories")]
-    MissingRequiredSignatories, // 624
+    InstructionDeprecated, // 621
 
     /// Math Overflow
     #[error("Mathematical Overflow")]
-    MathematicalOverflow, // 625
+    MathematicalOverflow, // 622
 
     /// Invalid lookup table account owner
     #[error("Invalid lookup table account owner")]
-    InvalidLookupTableAccountOwner, // 626
+    InvalidLookupTableAccountOwner, // 623
 
     /// Invalid lookup table accounts key
     #[error("Invalid lookup table account key")]
-    InvalidLookupTableAccountKey, // 627
+    InvalidLookupTableAccountKey, // 624
 
     /// Invalid number of accounts in message
     #[error("Invalid number of accounts in message")]
-    InvalidNumberOfAccountsInMessage, // 628
+    InvalidNumberOfAccountsInMessage, // 625
 
     /// Invalid account found in message
     #[error("Invalid account found in message")]
-    InvalidAccountFoundInMessage, // 629
+    InvalidAccountFoundInMessage, // 626
 
     /// Invalid account signer found in message
     #[error("Invalid account signer found in message")]
-    InvalidAccountSigner, // 630
+    InvalidAccountSigner, // 627
 
     /// Invalid writable account found in message
     #[error("Invalid writable account found in message")]
-    InvalidAccountWritable, // 631
+    InvalidAccountWritable, // 628
 
     /// Invalid account found
     #[error("Invalid account found")]
-    InvalidAccountFound, // 632
+    InvalidAccountFound, // 629
 
     /// Account in lookuptable is missing
     #[error("Account in lookuptable is missing")]
-    MissingAddressInLookuptable, // 633
+    MissingAddressInLookuptable, // 630
 
     /// Account is protected, it cannot be passed into a CPI as writable
     #[error("Account is protected, it cannot be passed into a CPI as writable")]
-    ProtectedAccount, // 634
+    ProtectedAccount, // 631
 
     /// TransactionMessage is malformed
     #[error("TransactionMessage is malformed")]
-    InvalidTransactionMessage, // 635
+    InvalidTransactionMessage, // 632
 
     /// Transaction buffer already exists
     #[error("Transaction buffer already exists")]
-    TransactionBufferAlreadyExists, // 636
+    TransactionBufferAlreadyExists, // 633
 
     /// Versioned Transaction already exists
     #[error("Versioned Transaction already exists")]
-    VersionedTransactionAlreadyExists, // 637
+    VersionedTransactionAlreadyExists, // 634
 
     /// Transaction buffer unauthorized extension
     #[error("Transaction buffer unauthorized extension")]
-    TransactionBufferUnauthorizedExtension, // 638
+    TransactionBufferUnauthorizedExtension, // 635
 
     /// Versioned Transaction already removed
     #[error("Versioned Transaction already removed")]
-    VersionedTransactionAlreadyRemoved, // 639
+    VersionedTransactionAlreadyRemoved, // 636
 
     /// Final buffer exceeded 10128 bytes
     #[error("Final buffer exceeded 10128 bytes")]
-    FinalBufferSizeExceeded, // 640
+    FinalBufferSizeExceeded, // 637
 
     /// Final message buffer hash doesnt match the expected hash
     #[error("Final message buffer hash doesnt match the expected hash")]
-    FinalBufferHashMismatch, // 641
+    FinalBufferHashMismatch, // 638
 
     /// Final buffer size mismatch
     #[error("Final buffer size mismatch")]
-    FinalBufferSizeMismatch, // 642
+    FinalBufferSizeMismatch, // 639
 
     /// Invalid number of accounts in the address look up table account
     #[error("Invalid number of accounts in the address look up table account")]
-    InvalidNumberOfAccounts, // 643
+    InvalidNumberOfAccounts, // 640
 
     /// Transaction buffer does not exist
     #[error("Transaction buffer does not exist")]
-    TransactionBufferDoesNotExist, // 644
+    TransactionBufferDoesNotExist, // 641
 
     /// Invalid account type
     #[error("Invalid account type")]
-    InvalidAccountType, // 645
+    InvalidAccountType, // 642
 
     /// Transaction creator must sign
     #[error("Transaction creator must sign")]
-    TransactionCreatorMustSign, // 646
+    TransactionCreatorMustSign, // 643
 
     /// Lookup Table Account has been extended after vote has started
     #[error("Lookup Table Account has been extended after vote has started")]
-    LookupTableAccountHasBeenAltered, // 647
+    LookupTableAccountHasBeenAltered, // 644
 }
 
 impl PrintProgramError for GovernanceError {

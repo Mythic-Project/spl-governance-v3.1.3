@@ -41,11 +41,8 @@ async fn test_set_governance_config() {
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 
@@ -182,11 +179,8 @@ async fn test_set_governance_config_with_invalid_governance_authority_error() {
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 

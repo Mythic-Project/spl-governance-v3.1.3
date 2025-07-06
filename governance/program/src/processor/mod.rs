@@ -1,6 +1,5 @@
 //! Program processor
 
-mod process_add_required_signatory;
 mod process_add_signatory;
 mod process_cancel_proposal;
 mod process_cast_vote;
@@ -17,7 +16,6 @@ mod process_flag_transaction_error;
 mod process_insert_transaction;
 mod process_refund_proposal_deposit;
 mod process_relinquish_vote;
-mod process_remove_required_signatory;
 mod process_remove_transaction;
 mod process_revoke_governing_tokens;
 mod process_set_governance_config;
@@ -31,7 +29,6 @@ mod proposal_versioned_transactions;
 
 use {
     crate::{error::GovernanceError, instruction::GovernanceInstruction},
-    process_add_required_signatory::*,
     process_add_signatory::*,
     process_cancel_proposal::*,
     process_cast_vote::*,
@@ -48,7 +45,6 @@ use {
     process_insert_transaction::*,
     process_refund_proposal_deposit::*,
     process_relinquish_vote::*,
-    process_remove_required_signatory::*,
     process_remove_transaction::*,
     process_revoke_governing_tokens::*,
     process_set_governance_config::*,
@@ -224,13 +220,6 @@ pub fn process_instruction<'a>(
 
         GovernanceInstruction::CompleteProposal {} => {
             process_complete_proposal(program_id, accounts)
-        }
-
-        GovernanceInstruction::AddRequiredSignatory { signatory } => {
-            process_add_required_signatory(program_id, accounts, signatory)
-        }
-        GovernanceInstruction::RemoveRequiredSignatory => {
-            process_remove_required_signatory(program_id, accounts)
         }
         GovernanceInstruction::CreateTransactionBuffer {
             buffer_index,
