@@ -221,20 +221,12 @@ pub enum GovernanceInstruction {
         proposal_seed: Pubkey,
     },
 
-    /// Adds a signatory to the Proposal which means this Proposal can't leave
-    /// Draft state until yet another Signatory signs
-    ///
-    ///   0. `[]` Governance account
-    ///   1. `[writable]` Proposal account associated with the governance
-    ///   2. `[writable]` Signatory Record Account
-    ///   3. `[signer]` Payer
-    ///   4. `[]` System program
-    ///   Either:
-    ///      - 5. `[]` TokenOwnerRecord account of the Proposal owner
-    ///        6. `[signer]` Governance Authority (Token Owner or Governance
-    ///           Delegate)
-    ///
-    ///      - 5. `[]` RequiredSignatory account associated with the governance.
+    ///   0. `[writable]` Proposal account
+    ///   1. `[]` TokenOwnerRecord account of the Proposal owner
+    ///   2. `[signer]` Governance Authority (Token Owner or Governance Delegate)
+    ///   3. `[writable]` Signatory Record Account
+    ///   4. `[signer]` Payer
+    ///   5. `[]` System program
     AddSignatory {
         #[allow(dead_code)]
         /// Signatory to add to the Proposal
