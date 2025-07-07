@@ -49,11 +49,8 @@ async fn test_execute_mint_versioned_transaction() {
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 
@@ -204,11 +201,8 @@ async fn test_execute_transfer_versioned_transaction() {
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 
@@ -363,11 +357,8 @@ async fn test_execute_versioned_transaction_with_create_proposal_and_execute_in_
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 
@@ -480,11 +471,8 @@ async fn test_execute_mint_versioned_transaction_token_2022_with_extensions() {
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 

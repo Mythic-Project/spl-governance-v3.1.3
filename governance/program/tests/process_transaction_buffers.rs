@@ -55,11 +55,8 @@ async fn test_create_transaction_buffer_and_execute() {
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 
@@ -221,11 +218,8 @@ async fn test_create_mint_transaction_buffer_and_execute() {
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 

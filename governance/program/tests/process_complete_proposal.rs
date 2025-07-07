@@ -135,11 +135,8 @@ async fn test_complete_proposal_with_completed_state_transaction_exists_error() 
         .unwrap();
 
     let signatory_record_cookie = governance_test
-        .with_signatory(
-            &proposal_cookie,
-            &governance_cookie,
-            &token_owner_record_cookie,
-        )
+        
+        .with_signatory(&proposal_cookie, &token_owner_record_cookie)
         .await
         .unwrap();
 

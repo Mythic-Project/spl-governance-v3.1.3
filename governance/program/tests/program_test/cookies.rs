@@ -178,6 +178,7 @@ pub struct VoteRecordCookie {
     pub account: VoteRecordV2,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ProposalTransactionCookie {
     pub address: Pubkey,

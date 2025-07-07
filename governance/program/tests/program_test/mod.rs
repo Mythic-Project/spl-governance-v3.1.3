@@ -16,15 +16,14 @@ use {
     solana_sdk::signature::{Keypair, Signer},
     spl_governance::{
         instruction::{
-            add_required_signatory, add_signatory, cancel_proposal, cast_vote, complete_proposal,
-            create_governance, create_native_treasury, create_proposal, create_realm,
-            create_token_owner_record, deposit_governing_tokens,
-            deposit_governing_tokens_with_extra_account_metas, execute_transaction, finalize_vote,
-            flag_transaction_error, insert_transaction, refund_proposal_deposit, relinquish_vote,
-            remove_required_signatory, remove_transaction, revoke_governing_tokens,
+            add_signatory, cancel_proposal, cast_vote, complete_proposal, create_governance,
+            create_native_treasury, create_proposal, create_realm, create_token_owner_record,
+            deposit_governing_tokens, deposit_governing_tokens_with_extra_account_metas,
+            execute_transaction, finalize_vote, flag_transaction_error, insert_transaction,
+            refund_proposal_deposit, relinquish_vote, remove_transaction, revoke_governing_tokens,
             set_governance_config, set_governance_delegate, set_realm_authority, set_realm_config,
             sign_off_proposal, upgrade_program_metadata, withdraw_governing_tokens,
-            withdraw_governing_tokens_with_extra_account_metas, AddSignatoryAuthority,
+            withdraw_governing_tokens_with_extra_account_metas,
         },
         state::{
             enums::{
@@ -49,7 +48,6 @@ use {
                 GoverningTokenConfigAccountArgs, RealmConfig, RealmV2, SetRealmAuthorityAction,
             },
             realm_config::{get_realm_config_address, GoverningTokenConfig, RealmConfigAccount},
-            required_signatory::RequiredSignatory,
             signatory_record::{get_signatory_record_address, SignatoryRecordV2},
             token_owner_record::{
                 get_token_owner_record_address, TokenOwnerRecordV2,
@@ -1157,7 +1155,7 @@ impl GovernanceProgramTest {
             name.clone(),
             min_community_weight_to_create_governance,
             community_mint_max_voter_weight_source,
-            true, // is_token_2022_for_community_token
+            true,  // is_token_2022_for_community_token
             false, // is_token_2022_for_council_token
         );
 
@@ -3031,11 +3029,7 @@ impl GovernanceProgramTest {
             .await?;
 
         let signatory_record_cookie = self
-            .with_signatory(
-                &proposal_cookie,
-                governance_cookie,
-                token_owner_record_cookie,
-            )
+            .with_signatory(&proposal_cookie, token_owner_record_cookie)
             .await?;
 
         self.sign_off_proposal(&proposal_cookie, &signatory_record_cookie)
@@ -3208,19 +3202,15 @@ impl GovernanceProgramTest {
     pub async fn with_signatory(
         &mut self,
         proposal_cookie: &ProposalCookie,
-        governance_cookie: &GovernanceCookie,
         token_owner_record_cookie: &TokenOwnerRecordCookie,
     ) -> Result<SignatoryRecordCookie, ProgramError> {
         let signatory = Keypair::new();
 
         let add_signatory_ix = add_signatory(
             &self.program_id,
-            &governance_cookie.address,
             &proposal_cookie.address,
-            &AddSignatoryAuthority::ProposalOwner {
-                token_owner_record: token_owner_record_cookie.address,
-                governance_authority: token_owner_record_cookie.token_owner.pubkey(),
-            },
+            &token_owner_record_cookie.address,
+            &token_owner_record_cookie.token_owner.pubkey(),
             &self.bench.payer.pubkey(),
             &signatory.pubkey(),
         );
@@ -3928,59 +3918,6 @@ impl GovernanceProgramTest {
     }
 
     #[allow(dead_code)]
-    pub async fn with_add_required_signatory_transaction(
-        &mut self,
-        proposal_cookie: &mut ProposalCookie,
-        token_owner_record_cookie: &TokenOwnerRecordCookie,
-        governance: &GovernanceCookie,
-        signatory: &Pubkey,
-    ) -> Result<ProposalTransactionCookie, ProgramError> {
-        let mut gwr_ix = add_required_signatory(
-            &self.program_id,
-            &governance.address,
-            &self.bench.payer.pubkey(),
-            signatory,
-        );
-
-        self.with_proposal_transaction(
-            proposal_cookie,
-            token_owner_record_cookie,
-            0,
-            None,
-            &mut gwr_ix,
-            None,
-        )
-        .await
-    }
-
-    #[allow(dead_code)]
-    pub async fn with_remove_required_signatory_transaction(
-        &mut self,
-        proposal_cookie: &mut ProposalCookie,
-        token_owner_record_cookie: &TokenOwnerRecordCookie,
-        governance: &GovernanceCookie,
-        signatory: &Pubkey,
-        beneficiary: &Pubkey,
-    ) -> Result<ProposalTransactionCookie, ProgramError> {
-        let mut ix = remove_required_signatory(
-            &self.program_id,
-            &governance.address,
-            signatory,
-            beneficiary,
-        );
-
-        self.with_proposal_transaction(
-            proposal_cookie,
-            token_owner_record_cookie,
-            0,
-            None,
-            &mut ix,
-            None,
-        )
-        .await
-    }
-
-    #[allow(dead_code)]
     pub async fn do_required_signoff(
         &mut self,
         realm_cookie: &RealmCookie,
@@ -4002,121 +3939,6 @@ impl GovernanceProgramTest {
             .await?;
 
         Ok(())
-    }
-
-    #[allow(dead_code)]
-    pub async fn with_signatory_record_for_required_signatory(
-        &mut self,
-        proposal_cookie: &ProposalCookie,
-        governance: &GovernanceCookie,
-        signatory: &Pubkey,
-    ) -> Result<SignatoryRecordCookie, ProgramError> {
-        let create_signatory_record_ix = add_signatory(
-            &self.program_id,
-            &governance.address,
-            &proposal_cookie.address,
-            &AddSignatoryAuthority::None,
-            &self.bench.payer.pubkey(),
-            signatory,
-        );
-
-        self.bench
-            .process_transaction(&[create_signatory_record_ix], Some(&[]))
-            .await?;
-
-        let signatory_record_address =
-            get_signatory_record_address(&self.program_id, &proposal_cookie.address, signatory);
-
-        let signatory_record_data = SignatoryRecordV2 {
-            account_type: GovernanceAccountType::SignatoryRecordV2,
-            proposal: proposal_cookie.address,
-            signatory: *signatory,
-            signed_off: false,
-            reserved_v2: [0; 8],
-        };
-
-        let signatory_record_cookie = SignatoryRecordCookie {
-            address: signatory_record_address,
-            account: signatory_record_data,
-            signatory: None,
-        };
-
-        Ok(signatory_record_cookie)
-    }
-
-    #[allow(dead_code)]
-    pub async fn with_governance_with_required_signatory(
-        &mut self,
-    ) -> (
-        TokenOwnerRecordCookie,
-        GovernanceCookie,
-        RealmCookie,
-        Keypair,
-    ) {
-        let realm_cookie = self.with_realm().await;
-        let governed_account_cookie = self.with_governed_account().await;
-
-        let signatory = Keypair::new();
-
-        let token_owner_record_cookie = self
-            .with_community_token_deposit(&realm_cookie)
-            .await
-            .unwrap();
-
-        let mut governance_cookie = self
-            .with_governance(
-                &realm_cookie,
-                &governed_account_cookie,
-                &token_owner_record_cookie,
-            )
-            .await
-            .unwrap();
-
-        let mut proposal_cookie = self
-            .with_proposal(&token_owner_record_cookie, &mut governance_cookie)
-            .await
-            .unwrap();
-
-        let signatory_record_cookie = self
-            .with_signatory(
-                &proposal_cookie,
-                &governance_cookie,
-                &token_owner_record_cookie,
-            )
-            .await
-            .unwrap();
-
-        let proposal_transaction_cookie = self
-            .with_add_required_signatory_transaction(
-                &mut proposal_cookie,
-                &token_owner_record_cookie,
-                &governance_cookie,
-                &signatory.pubkey(),
-            )
-            .await
-            .unwrap();
-
-        self.sign_off_proposal(&proposal_cookie, &signatory_record_cookie)
-            .await
-            .unwrap();
-
-        self.with_cast_yes_no_vote(&proposal_cookie, &token_owner_record_cookie, YesNoVote::Yes)
-            .await
-            .unwrap();
-
-        self.advance_clock_by_min_timespan(proposal_transaction_cookie.account.hold_up_time as u64)
-            .await;
-
-        self.execute_proposal_transaction(&proposal_cookie, &proposal_transaction_cookie)
-            .await
-            .unwrap();
-
-        (
-            token_owner_record_cookie,
-            governance_cookie,
-            realm_cookie,
-            signatory,
-        )
     }
 
     #[allow(dead_code)]
@@ -4270,16 +4092,6 @@ impl GovernanceProgramTest {
             .get_borsh_account::<ProposalVersionedTransaction>(
                 proposal_versioned_transaction_address,
             )
-            .await
-    }
-
-    #[allow(dead_code)]
-    pub async fn get_required_signatory_account(
-        &mut self,
-        required_signatory_address: &Pubkey,
-    ) -> RequiredSignatory {
-        self.bench
-            .get_borsh_account::<RequiredSignatory>(required_signatory_address)
             .await
     }
 

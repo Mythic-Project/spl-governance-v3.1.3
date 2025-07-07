@@ -21,7 +21,6 @@ use {
                 SetRealmAuthorityAction,
             },
             realm_config::get_realm_config_address,
-            required_signatory::get_required_signatory_address,
             signatory_record::get_signatory_record_address,
             token_owner_record::get_token_owner_record_address,
             vote_record::{get_vote_record_address, Vote},
@@ -222,20 +221,12 @@ pub enum GovernanceInstruction {
         proposal_seed: Pubkey,
     },
 
-    /// Adds a signatory to the Proposal which means this Proposal can't leave
-    /// Draft state until yet another Signatory signs
-    ///
-    ///   0. `[]` Governance account
-    ///   1. `[writable]` Proposal account associated with the governance
-    ///   2. `[writable]` Signatory Record Account
-    ///   3. `[signer]` Payer
-    ///   4. `[]` System program
-    ///   Either:
-    ///      - 5. `[]` TokenOwnerRecord account of the Proposal owner
-    ///        6. `[signer]` Governance Authority (Token Owner or Governance
-    ///           Delegate)
-    ///
-    ///      - 5. `[]` RequiredSignatory account associated with the governance.
+    ///   0. `[writable]` Proposal account
+    ///   1. `[]` TokenOwnerRecord account of the Proposal owner
+    ///   2. `[signer]` Governance Authority (Token Owner or Governance Delegate)
+    ///   3. `[writable]` Signatory Record Account
+    ///   4. `[signer]` Payer
+    ///   5. `[]` System program
     AddSignatory {
         #[allow(dead_code)]
         /// Signatory to add to the Proposal
@@ -561,27 +552,6 @@ pub enum GovernanceInstruction {
     ///   1. `[]` TokenOwnerRecord account of the Proposal owner
     ///   2. `[signer]` CompleteProposal authority (Token Owner or Delegate)
     CompleteProposal {},
-
-    /// Adds a required signatory to the Governance, which will be applied to
-    /// all proposals created with it
-    ///
-    ///   0. `[writable, signer]` The Governance account the config is for
-    ///   1. `[writable]` RequiredSignatory Account
-    ///   2. `[signer]` Payer
-    ///   3. `[]` System program
-    AddRequiredSignatory {
-        #[allow(dead_code)]
-        /// Required signatory to add to the Governance
-        signatory: Pubkey,
-    },
-
-    /// Removes a required signatory from the Governance
-    ///
-    ///  0. `[writable, signer]` The Governance account the config is for
-    ///  1. `[writable]` RequiredSignatory Account
-    ///  2. `[writable]` Beneficiary Account which would receive lamports from
-    ///     the disposed RequiredSignatory Account
-    RemoveRequiredSignatory,
 
     /// Creates a Transaction Buffer with a set of instructions for the Proposal
     /// at the given index position New Transaction must be inserted at the
@@ -1057,38 +1027,23 @@ pub fn create_proposal(
 pub fn add_signatory(
     program_id: &Pubkey,
     // Accounts
-    governance: &Pubkey,
     proposal: &Pubkey,
-    add_signatory_authority: &AddSignatoryAuthority,
+    token_owner_record: &Pubkey,
+    governance_authority: &Pubkey,
     payer: &Pubkey,
     // Args
     signatory: &Pubkey,
 ) -> Instruction {
     let signatory_record_address = get_signatory_record_address(program_id, proposal, signatory);
 
-    let mut accounts = vec![
-        AccountMeta::new_readonly(*governance, false),
+    let accounts = vec![
         AccountMeta::new(*proposal, false),
+        AccountMeta::new_readonly(*token_owner_record, false),
+        AccountMeta::new_readonly(*governance_authority, true),
         AccountMeta::new(signatory_record_address, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
     ];
-
-    match add_signatory_authority {
-        AddSignatoryAuthority::ProposalOwner {
-            governance_authority,
-            token_owner_record,
-        } => {
-            accounts.push(AccountMeta::new_readonly(*token_owner_record, false));
-            accounts.push(AccountMeta::new_readonly(*governance_authority, true));
-        }
-        AddSignatoryAuthority::None => {
-            accounts.push(AccountMeta::new_readonly(
-                get_required_signatory_address(program_id, governance, signatory),
-                false,
-            ));
-        }
-    };
 
     let instruction = GovernanceInstruction::AddSignatory {
         signatory: *signatory,
@@ -1099,22 +1054,6 @@ pub fn add_signatory(
         accounts,
         data: borsh::to_vec(&instruction).unwrap(),
     }
-}
-
-#[derive(Debug, Copy, Clone)]
-/// Enum to specify the authority by which the instruction should add a
-/// signatory
-pub enum AddSignatoryAuthority {
-    /// Proposal owners can add optional signatories to a proposal
-    ProposalOwner {
-        /// Token owner or its delegate
-        governance_authority: Pubkey,
-        /// Token owner record of the Proposal owner
-        token_owner_record: Pubkey,
-    },
-    /// Anyone can add signatories that are required by the governance to a
-    /// proposal
-    None,
 }
 
 /// Creates SignOffProposal instruction
@@ -1702,62 +1641,6 @@ pub fn revoke_governing_tokens(
     ];
 
     let instruction = GovernanceInstruction::RevokeGoverningTokens { amount };
-
-    Instruction {
-        program_id: *program_id,
-        accounts,
-        data: borsh::to_vec(&instruction).unwrap(),
-    }
-}
-
-/// Creates AddRequiredSignatory instruction
-pub fn add_required_signatory(
-    program_id: &Pubkey,
-    // Accounts
-    governance: &Pubkey,
-    payer: &Pubkey,
-    // Args
-    signatory: &Pubkey,
-) -> Instruction {
-    let required_signatory_address =
-        get_required_signatory_address(program_id, governance, signatory);
-
-    let accounts = vec![
-        AccountMeta::new(*governance, true),
-        AccountMeta::new(required_signatory_address, false),
-        AccountMeta::new(*payer, true),
-        AccountMeta::new_readonly(system_program::id(), false),
-    ];
-
-    let instruction = GovernanceInstruction::AddRequiredSignatory {
-        signatory: *signatory,
-    };
-
-    Instruction {
-        program_id: *program_id,
-        accounts,
-        data: borsh::to_vec(&instruction).unwrap(),
-    }
-}
-
-/// Creates RemoveRequiredSignatory instruction
-pub fn remove_required_signatory(
-    program_id: &Pubkey,
-    // Accounts
-    governance: &Pubkey,
-    signatory: &Pubkey,
-    beneficiary: &Pubkey,
-) -> Instruction {
-    let required_signatory_address =
-        get_required_signatory_address(program_id, governance, signatory);
-
-    let accounts = vec![
-        AccountMeta::new(*governance, true),
-        AccountMeta::new(required_signatory_address, false),
-        AccountMeta::new(*beneficiary, false),
-    ];
-
-    let instruction = GovernanceInstruction::RemoveRequiredSignatory;
 
     Instruction {
         program_id: *program_id,
