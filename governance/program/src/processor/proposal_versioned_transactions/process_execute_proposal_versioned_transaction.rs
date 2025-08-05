@@ -55,7 +55,8 @@ pub fn process_execute_versioned_transaction(
         clock.unix_timestamp,
     )?;
 
-    let transaction = proposal_versioned_transaction_data.take();
+    // Drop the .take() since we have to rewrite the proposal versioned transaction data later on.
+    let transaction = proposal_versioned_transaction_data.clone();
 
     // `remaining_accounts` must include the following accounts in the exact order:
     // 1. AddressLookupTable accounts in the order they appear in
