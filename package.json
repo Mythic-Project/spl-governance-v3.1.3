@@ -21,7 +21,7 @@
         "test": "turbo run test"
     },
     "devDependencies": {
-        "@solana/eslint-config-solana": "^1.0.2",
+        "@solana/eslint-config-solana": "^5.0.0",
         "@solana/prettier-config-solana": "^0.0.4",
         "eslint-config-turbo": "^1.11.3",
         "turbo": "^1.11.3"
