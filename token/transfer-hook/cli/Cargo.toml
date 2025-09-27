@@ -9,7 +9,7 @@ repository = "https://github.com/solana-labs/solana-program-library"
 version = "0.1.0"
 
 [dependencies]
-clap = { version = "3", features = ["cargo"] }
+clap = { version = "4", features = ["cargo"] }
 futures-util = "0.3.30"
 solana-clap-v3-utils = { workspace = true }
 solana-cli-config = { workspace = true }
