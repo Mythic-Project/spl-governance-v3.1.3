@@ -42,6 +42,7 @@ spl-transfer-hook-example = { path = "../../token/transfer-hook/example", featur
 ] }
 
 [lib]
+name = "governance"
 crate-type = ["cdylib", "lib"]
 
 [lints]
