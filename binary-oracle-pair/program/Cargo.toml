@@ -16,7 +16,7 @@ num-traits = "0.2"
 solana-program = { workspace = true }
 spl-token = { version = "4.0", path = "../../token/program", features = [ "no-entrypoint" ] }
 thiserror = "1.0"
-uint = "0.9"
+uint = "0.10"
 borsh = { workspace = true }
 
 [dev-dependencies]

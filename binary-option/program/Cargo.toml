@@ -14,7 +14,7 @@ thiserror = "1.0"
 spl-token = {version = "4.0", path = "../../token/program", features = ["no-entrypoint"]}
 arrayref = "0.3.7"
 borsh = { workspace = true }
-uint = "0.9"
+uint = "0.10"
 
 [lib]
 crate-type = ["cdylib", "lib"]
