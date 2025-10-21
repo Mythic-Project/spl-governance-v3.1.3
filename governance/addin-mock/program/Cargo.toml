@@ -28,7 +28,7 @@ thiserror = "1.0"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
-proptest = "1.4"
+proptest = "1.8"
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
 spl-governance-test-sdk = { version = "0.1.3", path ="../../test-sdk"}
