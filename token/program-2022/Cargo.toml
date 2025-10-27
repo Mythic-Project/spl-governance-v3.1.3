@@ -41,7 +41,7 @@ base64 = { version = "0.21.5", optional = true }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
-proptest = "1.4"
+proptest = "1.9"
 serial_test = "3.0.0"
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }

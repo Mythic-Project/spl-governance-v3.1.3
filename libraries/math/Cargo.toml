@@ -20,7 +20,7 @@ thiserror = "1.0"
 uint = "0.9"
 
 [dev-dependencies]
-proptest = "1.4.0"
+proptest = "1.9.0"
 solana-program-test = { workspace = true }
 solana-sdk = { workspace = true }
 libm = "0.2.8"
