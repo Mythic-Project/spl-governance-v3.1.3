@@ -8042,7 +8042,7 @@ version = "3.1.2"
 dependencies = [
  "arrayref",
  "assert_matches",
- "base64 0.21.7",
+ "base64 0.22.1",
  "bincode",
  "borsh 1.5.3",
  "num-derive 0.4.2",
@@ -8257,7 +8257,7 @@ dependencies = [
 name = "spl-pod"
 version = "0.1.0"
 dependencies = [
- "base64 0.21.7",
+ "base64 0.22.1",
  "borsh 0.10.4",
  "bytemuck",
  "serde",
@@ -8624,7 +8624,7 @@ name = "spl-token-2022"
 version = "1.0.0"
 dependencies = [
  "arrayref",
- "base64 0.21.7",
+ "base64 0.22.1",
  "bytemuck",
  "lazy_static",
  "num-derive 0.4.2",
@@ -8732,7 +8732,7 @@ name = "spl-token-cli"
 version = "3.3.0"
 dependencies = [
  "assert_cmd",
- "base64 0.21.7",
+ "base64 0.22.1",
  "clap 2.34.0",
  "console",
  "futures 0.3.31",
