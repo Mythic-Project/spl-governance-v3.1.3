@@ -764,7 +764,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "115e54d64eb62cdebad391c19efc9dce4981c690c85a33a12199d99bb9546fee"
 dependencies = [
  "borsh-derive 0.10.4",
- "hashbrown 0.13.2",
+ "hashbrown 0.12.3",
 ]
 
 [[package]]
@@ -7859,7 +7859,7 @@ dependencies = [
 name = "spl-discriminator"
 version = "0.1.0"
 dependencies = [
- "borsh 0.10.4",
+ "borsh 1.5.3",
  "bytemuck",
  "solana-program",
  "spl-discriminator-derive 0.1.1",
@@ -8258,7 +8258,7 @@ name = "spl-pod"
 version = "0.1.0"
 dependencies = [
  "base64 0.21.7",
- "borsh 0.10.4",
+ "borsh 1.5.3",
  "bytemuck",
  "serde",
  "serde_json",
