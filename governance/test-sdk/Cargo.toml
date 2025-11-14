@@ -23,7 +23,7 @@ spl-token = { version = "4.0.0", path = "../../token/program", features = [
   "no-entrypoint",
 ] }
 spl-token-2022 = { workspace = true }
-thiserror = "1.0"
+thiserror = "2.0"
 spl-tlv-account-resolution = { workspace = true }
 spl-transfer-hook-interface = { workspace = true }
 spl-transfer-hook-example = { version = "0.4", path = "../../token/transfer-hook/example", features = [ "no-entrypoint" ] }

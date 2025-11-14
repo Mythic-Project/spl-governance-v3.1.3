@@ -21,7 +21,7 @@ solana-program = { workspace = true }
 num-traits = "0.2"
 borsh = { workspace = true }
 num-derive = "0.4.1"
-thiserror = "1.0.56"
+thiserror = "2.0.10"
 
 [dev-dependencies]
 solana-program-test = { workspace = true }

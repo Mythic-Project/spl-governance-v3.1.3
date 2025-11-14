@@ -12,7 +12,7 @@ num-derive = "0.4"
 num-traits = "0.2"
 solana-program = { workspace = true }
 spl-program-error-derive = { version = "0.3.1", path = "./derive" }
-thiserror = "1.0"
+thiserror = "2.0"
 
 [dev-dependencies]
 lazy_static = "1.4"
