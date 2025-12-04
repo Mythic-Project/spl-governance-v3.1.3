@@ -17,7 +17,7 @@ borsh = { workspace = true }
 bytemuck = "1.13"
 num-derive = "0.4"
 num-traits = "0.2"
-num_enum = "0.7.2"
+num_enum = "0.7.5"
 serde = "1.0.195"
 serde_derive = "1.0.103"
 solana-program = { workspace = true }
