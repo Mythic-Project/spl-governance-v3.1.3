@@ -51,7 +51,7 @@ solana-test-validator = { workspace = true }
 assert_cmd = "2.0.12"
 libtest-mimic = "0.6"
 serial_test = "3.0.0"
-tempfile = "3.9.0"
+tempfile = "3.23.0"
 
 [[bin]]
 name = "spl-token"
