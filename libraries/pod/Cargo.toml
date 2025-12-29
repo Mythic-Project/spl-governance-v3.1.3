@@ -21,7 +21,7 @@ solana-zk-token-sdk = { workspace = true }
 spl-program-error = { version = "0.3", path = "../program-error" }
 
 [dev-dependencies]
-serde_json = "1.0.111"
+serde_json = "1.0.148"
 
 [lib]
 crate-type = ["cdylib", "lib"]
