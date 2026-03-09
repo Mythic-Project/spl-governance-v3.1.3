@@ -1603,3 +1603,151 @@ async fn test_cast_approve_vote_with_cannot_vote_in_cool_off_time_error() {
 
     assert_eq!(err, GovernanceError::VoteNotAllowedInCoolOffTime.into());
 }
+
+// Token-2022 CastVote tests
+#[tokio::test]
+async fn test_cast_vote_with_token_2022() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_cookie = governance_test.with_realm_token_2022().await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
+
+    let token_owner_record_cookie = governance_test
+        .with_community_2022_token_deposit(&realm_cookie)
+        .await
+        .unwrap();
+
+    let mut governance_cookie = governance_test
+        .with_governance(
+            &realm_cookie,
+            &governed_account_cookie,
+            &token_owner_record_cookie,
+        )
+        .await
+        .unwrap();
+
+    let proposal_cookie = governance_test
+        .with_signed_off_proposal(&token_owner_record_cookie, &mut governance_cookie)
+        .await
+        .unwrap();
+
+    // Act
+    let vote_record_cookie = governance_test
+        .with_cast_yes_no_vote(&proposal_cookie, &token_owner_record_cookie, YesNoVote::Yes)
+        .await
+        .unwrap();
+
+    // Assert
+    let vote_record_account = governance_test
+        .get_vote_record_account(&vote_record_cookie.address)
+        .await;
+
+    assert_eq!(vote_record_cookie.account, vote_record_account);
+
+    let proposal_account = governance_test
+        .get_proposal_account(&proposal_cookie.address)
+        .await;
+
+    assert_eq!(proposal_account.state, ProposalState::Succeeded);
+}
+
+#[tokio::test]
+async fn test_cast_vote_with_token_2022_with_transfer_fees() {
+    // Token-2022 mints with extensions pad the base Mint data (82 bytes) to
+    // Account::LEN (165 bytes) before placing the AccountType discriminator.
+    // valid_mint_length() must check byte 165, not byte 82.
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_cookie = governance_test
+        .with_realm_token_2022_with_transfer_fees()
+        .await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
+
+    let token_owner_record_cookie = governance_test
+        .with_community_2022_token_deposit_with_transfer_fees(&realm_cookie)
+        .await
+        .unwrap();
+
+    let mut governance_cookie = governance_test
+        .with_governance(
+            &realm_cookie,
+            &governed_account_cookie,
+            &token_owner_record_cookie,
+        )
+        .await
+        .unwrap();
+
+    let proposal_cookie = governance_test
+        .with_signed_off_proposal(&token_owner_record_cookie, &mut governance_cookie)
+        .await
+        .unwrap();
+
+    // Act
+    let vote_record_cookie = governance_test
+        .with_cast_yes_no_vote(&proposal_cookie, &token_owner_record_cookie, YesNoVote::Yes)
+        .await
+        .unwrap();
+
+    // Assert
+    let vote_record_account = governance_test
+        .get_vote_record_account(&vote_record_cookie.address)
+        .await;
+
+    assert_eq!(vote_record_cookie.account, vote_record_account);
+
+    let proposal_account = governance_test
+        .get_proposal_account(&proposal_cookie.address)
+        .await;
+
+    assert_eq!(proposal_account.state, ProposalState::Succeeded);
+}
+
+#[tokio::test]
+async fn test_cast_deny_vote_with_token_2022_with_transfer_fees() {
+    // Arrange
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_cookie = governance_test
+        .with_realm_token_2022_with_transfer_fees()
+        .await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
+
+    let token_owner_record_cookie = governance_test
+        .with_community_2022_token_deposit_with_transfer_fees(&realm_cookie)
+        .await
+        .unwrap();
+
+    let mut governance_cookie = governance_test
+        .with_governance(
+            &realm_cookie,
+            &governed_account_cookie,
+            &token_owner_record_cookie,
+        )
+        .await
+        .unwrap();
+
+    let proposal_cookie = governance_test
+        .with_signed_off_proposal(&token_owner_record_cookie, &mut governance_cookie)
+        .await
+        .unwrap();
+
+    // Act
+    let vote_record_cookie = governance_test
+        .with_cast_yes_no_vote(&proposal_cookie, &token_owner_record_cookie, YesNoVote::No)
+        .await
+        .unwrap();
+
+    // Assert
+    let vote_record_account = governance_test
+        .get_vote_record_account(&vote_record_cookie.address)
+        .await;
+
+    assert_eq!(vote_record_cookie.account, vote_record_account);
+
+    let proposal_account = governance_test
+        .get_proposal_account(&proposal_cookie.address)
+        .await;
+
+    assert_eq!(proposal_account.state, ProposalState::Defeated);
+}
