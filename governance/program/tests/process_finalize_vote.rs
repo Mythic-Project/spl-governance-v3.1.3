@@ -508,3 +508,76 @@ async fn test_finalize_vote_with_cannot_finalize_during_cool_off_time_error() {
 
     assert_eq!(err, GovernanceError::CannotFinalizeVotingInProgress.into());
 }
+
+// Token-2022 FinalizeVote tests
+#[tokio::test]
+async fn test_finalize_vote_with_token_2022_with_transfer_fees() {
+    // Arrange
+    // Use VoteTipping::Disabled so vote doesn't tip on cast, allowing us to
+    // test the finalize path (which also calls resolve_max_voter_weight →
+    // get_spl_token_mint_supply → assert_is_valid_spl_token_mint).
+    let mut governance_test = GovernanceProgramTest::start_new().await;
+
+    let realm_cookie = governance_test
+        .with_realm_token_2022_with_transfer_fees()
+        .await;
+    let governed_account_cookie = governance_test.with_governed_account().await;
+
+    let token_owner_record_cookie = governance_test
+        .with_community_2022_token_deposit_with_transfer_fees(&realm_cookie)
+        .await
+        .unwrap();
+
+    let mut governance_config = governance_test.get_default_governance_config();
+    governance_config.community_vote_threshold = VoteThreshold::YesVotePercentage(40);
+    governance_config.community_vote_tipping =
+        spl_governance::state::enums::VoteTipping::Disabled;
+
+    let mut governance_cookie = governance_test
+        .with_governance_using_config(
+            &realm_cookie,
+            &governed_account_cookie,
+            &token_owner_record_cookie,
+            &governance_config,
+        )
+        .await
+        .unwrap();
+
+    let proposal_cookie = governance_test
+        .with_signed_off_proposal(&token_owner_record_cookie, &mut governance_cookie)
+        .await
+        .unwrap();
+
+    governance_test
+        .with_cast_yes_no_vote(&proposal_cookie, &token_owner_record_cookie, YesNoVote::Yes)
+        .await
+        .unwrap();
+
+    // Ensure not tipped (VoteTipping::Disabled)
+    let proposal_account = governance_test
+        .get_proposal_account(&proposal_cookie.address)
+        .await;
+
+    assert_eq!(ProposalState::Voting, proposal_account.state);
+
+    // Advance timestamp past max_voting_time
+    governance_test
+        .advance_clock_past_timestamp(
+            governance_cookie.account.config.voting_base_time as i64
+                + proposal_account.voting_at.unwrap(),
+        )
+        .await;
+
+    // Act
+    governance_test
+        .finalize_vote(&realm_cookie, &proposal_cookie, None)
+        .await
+        .unwrap();
+
+    // Assert
+    let proposal_account = governance_test
+        .get_proposal_account(&proposal_cookie.address)
+        .await;
+
+    assert_eq!(proposal_account.state, ProposalState::Succeeded);
+}

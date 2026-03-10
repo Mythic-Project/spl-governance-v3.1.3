@@ -648,9 +648,9 @@ pub fn get_mint_decimals(account_info: &AccountInfo) -> Result<u8, ProgramError>
 const ACCOUNTTYPE_MINT: u8 = AccountType::Mint as u8;
 fn valid_mint_length(mint_data: &[u8]) -> bool {
     mint_data.len() == Mint::LEN
-        || (mint_data.len() > Mint::LEN
+        || (mint_data.len() > Account::LEN
             && mint_data.len() != Multisig::LEN
-            && ACCOUNTTYPE_MINT == mint_data[Mint::LEN])
+            && ACCOUNTTYPE_MINT == mint_data[Account::LEN])
 }
 
 /// Get current TransferFee, returns 0 if no TransferFeeConfig exist.
